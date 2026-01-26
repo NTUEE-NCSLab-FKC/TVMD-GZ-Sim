@@ -1,0 +1,19 @@
+<launch>
+  <!-- 測試用 Launch 文件 - 簡化版，只顯示模型 -->
+
+  <arg name="model" default="$(find tvmd)/urdf/ducted_fan_test.urdf"/>
+  <arg name="gui" default="true"/>
+
+  <!-- 載入 URDF -->
+  <param name="robot_description" textfile="$(arg model)"/>
+  <param name="use_gui" value="$(arg gui)"/>
+
+  <!-- Joint State Publisher GUI - 可以手動調整關節（如果有的話） -->
+  <node name="joint_state_publisher_gui" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui"/>
+
+  <!-- Robot State Publisher - 發布 TF -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+
+  <!-- Rviz -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find tvmd)/launch/test_model.rviz" required="true"/>
+</launch>

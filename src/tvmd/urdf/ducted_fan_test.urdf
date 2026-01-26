@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<robot name="ducted_fan_uav">
+
+  <!-- Base Link - 整個飛行器 -->
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <!--
+          將你的 STL 檔案放到 meshes/ducted_fan/ 目錄
+          然後修改下面的檔名
+          scale: 如果 STL 單位是 mm，使用 0.001；如果是 m，使用 1
+        -->
+        <mesh filename="package://tvmd/meshes/ducted_fan/your_model.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0.2 0.2 0.8 1"/>
+      </material>
+    </visual>
+
+    <!-- 碰撞模型（可選，用於模擬） -->
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://tvmd/meshes/ducted_fan/your_model.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+
+    <!-- 慣性（簡化測試用，之後需要根據實際數據修改） -->
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+    </inertial>
+  </link>
+
+  <!-- IMU Sensor Link -->
+  <link name="imu_sensor_link">
+    <visual>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+      <material name="red">
+        <color rgba="1 0 0 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_sensor_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+</robot>
