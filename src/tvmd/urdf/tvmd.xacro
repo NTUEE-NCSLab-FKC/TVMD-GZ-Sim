@@ -34,20 +34,21 @@
 <xacro:module module_id="3" />
 <xacro:module module_id="4" />
 
-<xacro:rigid_connection 
-  parent="base_link" child="module1_body_link" 
-  pos_x="0.215" pos_y="0.215" pos_z="0.0" z_psi="${pi/2}" />
+<!-- Module positions for ducted fan UAV (CA_MD*_AZ=0 for all) -->
+<xacro:rigid_connection
+  parent="base_link" child="module1_body_link"
+  pos_x="0.185" pos_y="0.16" pos_z="0.0" z_psi="0" />
 
-<xacro:rigid_connection 
-  parent="base_link" child="module2_body_link" 
-  pos_x="0.215" pos_y="-0.215" pos_z="0.0" z_psi="${pi/2}" />
+<xacro:rigid_connection
+  parent="base_link" child="module2_body_link"
+  pos_x="0.185" pos_y="-0.16" pos_z="0.0" z_psi="0" />
 
-<xacro:rigid_connection 
-  parent="base_link" child="module3_body_link" 
-  pos_x="-0.215" pos_y="0.215" pos_z="0.0" z_psi="0" />
-  
-<xacro:rigid_connection 
-  parent="base_link" child="module4_body_link" 
-  pos_x="-0.215" pos_y="-0.215" pos_z="0.0" z_psi="0" />
+<xacro:rigid_connection
+  parent="base_link" child="module3_body_link"
+  pos_x="-0.185" pos_y="0.16" pos_z="0.0" z_psi="0" />
+
+<xacro:rigid_connection
+  parent="base_link" child="module4_body_link"
+  pos_x="-0.185" pos_y="-0.16" pos_z="0.0" z_psi="0" />
 
 </robot>
