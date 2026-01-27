@@ -101,6 +101,7 @@
   <xacro:gz_material joint_name="module${module_id}_prop1_link" color_name="Yellow" />
 </xacro:macro>
 
+<!-- prop2_link removed for ducted fan UAV (single propeller per module)
 <xacro:macro name="prop2_link" params="module_id">
   <link name="module${module_id}_prop2_link">
     <inertial>
@@ -125,6 +126,7 @@
 
   <xacro:gz_material joint_name="module${module_id}_prop2_link" color_name="Yellow" />
 </xacro:macro>
+-->
 
 <!-- Joints -->
 
@@ -188,6 +190,7 @@
     number_motor="${module_id*2-2}"/>
 </xacro:macro>
 
+<!-- actuator_prop2_joint removed for ducted fan UAV (single propeller per module)
 <xacro:macro name="actuator_prop2_joint" params="module_id">
   <joint name="module${module_id}_actuator_prop2_joint" type="continuous">
     <origin xyz="0.0 0.0 -0.0781" rpy="0 0 0"/>
@@ -195,14 +198,14 @@
     <child link="module${module_id}_prop2_link"/>
     <axis xyz="0.0 0.0 -1.0"/>
     <limit effort="30000" velocity="10000.0" lower="-1e+16" upper="1e+16" />
-    <!-- <limit lower="-1e+16" upper="1e+16" /> -->
   </joint>
 
   <xacro:simple_transmission joint_name="module${module_id}_actuator_prop2_joint" />
 
-  <xacro:gz_prop joint_name="module${module_id}_actuator_prop2_joint" 
+  <xacro:gz_prop joint_name="module${module_id}_actuator_prop2_joint"
     link_name="module${module_id}_prop2_link"
     number_motor="${module_id*2-1}"/>
 </xacro:macro>
+-->
 
 </robot>
