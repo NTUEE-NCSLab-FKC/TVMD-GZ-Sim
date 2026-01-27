@@ -17,13 +17,13 @@
   <xacro:gimbal_link module_id="${module_id}" />
   <xacro:actuator_link module_id="${module_id}" />
   <xacro:prop1_link module_id="${module_id}" />
-  <xacro:prop2_link module_id="${module_id}" />
+  <!-- prop2_link removed for ducted fan (single propeller) -->
 
   <!-- Joints -->
   <xacro:body_gimbal_joint module_id="${module_id}" />
   <xacro:gimbal_actuator_joint module_id="${module_id}" />
   <xacro:actuator_prop1_joint module_id="${module_id}" />
-  <xacro:actuator_prop2_joint module_id="${module_id}" />
+  <!-- actuator_prop2_joint removed for ducted fan (single propeller) -->
 </xacro:macro>
 
 <!-- Team System -->
