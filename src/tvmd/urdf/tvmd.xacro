@@ -32,20 +32,25 @@
 <xacro:module module_id="3" />
 <xacro:module module_id="4" />
 
-<xacro:rigid_connection 
-  parent="base_link" child="module1_body_link" 
-  pos_x="0.215" pos_y="0.215" pos_z="0.0" z_psi="${pi/2}" />
+<!-- Module positions matching PX4 CA_MDx parameters -->
+<!-- MD0: Front-Left -->
+<xacro:rigid_connection
+  parent="base_link" child="module1_body_link"
+  pos_x="0.185" pos_y="0.16" pos_z="0.0" z_psi="0" />
 
-<xacro:rigid_connection 
-  parent="base_link" child="module2_body_link" 
-  pos_x="0.215" pos_y="-0.215" pos_z="0.0" z_psi="${pi/2}" />
+<!-- MD1: Front-Right -->
+<xacro:rigid_connection
+  parent="base_link" child="module2_body_link"
+  pos_x="0.185" pos_y="-0.16" pos_z="0.0" z_psi="0" />
 
-<xacro:rigid_connection 
-  parent="base_link" child="module3_body_link" 
-  pos_x="-0.215" pos_y="0.215" pos_z="0.0" z_psi="0" />
-  
-<xacro:rigid_connection 
-  parent="base_link" child="module4_body_link" 
-  pos_x="-0.215" pos_y="-0.215" pos_z="0.0" z_psi="0" />
+<!-- MD2: Rear-Left -->
+<xacro:rigid_connection
+  parent="base_link" child="module3_body_link"
+  pos_x="-0.185" pos_y="0.16" pos_z="0.0" z_psi="0" />
+
+<!-- MD3: Rear-Right -->
+<xacro:rigid_connection
+  parent="base_link" child="module4_body_link"
+  pos_x="-0.185" pos_y="-0.16" pos_z="0.0" z_psi="0" />
 
 </robot>
