@@ -101,31 +101,6 @@
   <xacro:gz_material joint_name="module${module_id}_prop1_link" color_name="Yellow" />
 </xacro:macro>
 
-<xacro:macro name="prop2_link" params="module_id">
-  <link name="module${module_id}_prop2_link">
-    <inertial>
-      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
-      <mass value="0.00253778"/>
-      <inertia ixx="0.00000702" iyy="0.00000005" izz="0.00000705" ixy="0.00000000" iyz="-0.00000009" ixz="0.00000000"/>
-    </inertial>
-    <visual>
-      <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0 0"/>
-      <geometry>
-        <mesh filename="package://tvmd/meshes/agent/Propeller_9047.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-      <material name="yellow"/>
-    </visual>
-    <collision name='module${module_id}_rotor_2_collision'>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <cylinder length="0.005" radius="0.12"/>
-      </geometry>
-    </collision>
-  </link>
-
-  <xacro:gz_material joint_name="module${module_id}_prop2_link" color_name="Yellow" />
-</xacro:macro>
-
 <!-- Joints -->
 
 <!-- Y-Servo -->
@@ -183,26 +158,9 @@
 
   <xacro:simple_transmission joint_name="module${module_id}_actuator_prop1_joint" />
 
-  <xacro:gz_prop joint_name="module${module_id}_actuator_prop1_joint" 
+  <xacro:gz_prop joint_name="module${module_id}_actuator_prop1_joint"
     link_name="module${module_id}_prop1_link"
-    number_motor="${module_id*2-2}"/>
-</xacro:macro>
-
-<xacro:macro name="actuator_prop2_joint" params="module_id">
-  <joint name="module${module_id}_actuator_prop2_joint" type="continuous">
-    <origin xyz="0.0 0.0 -0.0781" rpy="0 0 0"/>
-    <parent link="module${module_id}_actuator_link"/>
-    <child link="module${module_id}_prop2_link"/>
-    <axis xyz="0.0 0.0 -1.0"/>
-    <limit effort="30000" velocity="10000.0" lower="-1e+16" upper="1e+16" />
-    <!-- <limit lower="-1e+16" upper="1e+16" /> -->
-  </joint>
-
-  <xacro:simple_transmission joint_name="module${module_id}_actuator_prop2_joint" />
-
-  <xacro:gz_prop joint_name="module${module_id}_actuator_prop2_joint" 
-    link_name="module${module_id}_prop2_link"
-    number_motor="${module_id*2-1}"/>
+    number_motor="${module_id-1}"/>
 </xacro:macro>
 
 </robot>

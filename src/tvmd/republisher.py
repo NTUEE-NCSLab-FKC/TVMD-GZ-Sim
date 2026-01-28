@@ -33,20 +33,16 @@ name:
   - module1_body_gimbal_joint
   - module1_gimbal_actuator_joint
   - module1_actuator_prop1_joint
-  - module1_actuator_prop2_joint
   - module2_body_gimbal_joint
   - module2_gimbal_actuator_joint
   - module2_actuator_prop1_joint
-  - module2_actuator_prop2_joint
   - module3_body_gimbal_joint
   - module3_gimbal_actuator_joint
   - module3_actuator_prop1_joint
-  - module3_actuator_prop2_joint
   - module4_body_gimbal_joint
   - module4_gimbal_actuator_joint
   - module4_actuator_prop1_joint
-  - module4_actuator_prop2_joint
-position: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+position: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 velocity: []
 effort: []
 '''
@@ -349,7 +345,7 @@ class Republisher:
 
         # joint state message
         self.joint_msg = JointState()
-        self.joint_msg.position = [0.0 for i in range(4 * self.num_modules)]
+        self.joint_msg.position = [0.0 for i in range(3 * self.num_modules)]
         # joint_names = ["_body_gimbal_joint", "_gimbal_actuator_joint", "_actuator_prop1_joint", "_actuator_prop2_joint"]
         # self.joint_msg.name = ["module{}{}".format(i+1, n) for i in range(self.num_modules) for n in joint_names]
         self.joint_msg.name = [str(name) for name in self.joint_list]
@@ -369,24 +365,26 @@ class Republisher:
         self.marker_data = MetaDataMarker(self.num_modules)
 
     def data_update(self, data, mode):
-        servo_offset = 0 if mode == "servos" else 2
-        for i in range(4):
-            for j in range(2):
-                # the order of the joints in the message is different from the order in the urdf file
-                # the order in the message is: module1_body_gimbal_joint, module1_gimbal_actuator_joint, module1_actuator_prop1_joint, module1_actuator_prop2_joint
-                # i.e., y, x, p1, p2
-                joint_idx = 4*i + (1-j) + servo_offset
-                ctrl_idx = 2*i + j
-                joint_name = self.joint_list[joint_idx]
-                joint = self.free_joints[joint_name]
+        if mode == "servos":
+            # Handle servos: gimbal (idx 0) and actuator (idx 1) for each module
+            for i in range(4):
+                for j in range(2):
+                    # joint order: body_gimbal_joint, gimbal_actuator_joint, actuator_prop1_joint
+                    # j=0 -> gimbal (idx 0), j=1 -> actuator (idx 1)
+                    joint_idx = 3*i + (1-j)
+                    ctrl_idx = 2*i + j
+                    joint_name = self.joint_list[joint_idx]
+                    joint = self.free_joints[joint_name]
 
-                if mode == "servos":
                     factor = (joint['max'] - joint['min']) / 2
                     offset = (joint['max'] + joint['min']) / 2
-                    
                     self.joint_msg.position[joint_idx] = data.control[ctrl_idx] * factor + offset
-                else:
-                    self.joint_msg.position[joint_idx] += data.control[ctrl_idx]
+        else:
+            # Handle motors: only prop1 (idx 2) for each module
+            for i in range(4):
+                joint_idx = 3*i + 2  # prop1 is at index 2 within each module
+                ctrl_idx = i  # Only 4 motors now (one per module)
+                self.joint_msg.position[joint_idx] += data.control[ctrl_idx]
         
         upcoming_timestamp = data.timestamp
 
