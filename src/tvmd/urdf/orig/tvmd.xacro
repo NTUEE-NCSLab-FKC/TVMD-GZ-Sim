@@ -17,13 +17,13 @@
   <xacro:gimbal_link module_id="${module_id}" />
   <xacro:actuator_link module_id="${module_id}" />
   <xacro:prop1_link module_id="${module_id}" />
-  <!-- <xacro:prop2_link module_id="${module_id}" /> -->
+  <xacro:prop2_link module_id="${module_id}" />
 
   <!-- Joints -->
   <xacro:body_gimbal_joint module_id="${module_id}" />
   <xacro:gimbal_actuator_joint module_id="${module_id}" />
   <xacro:actuator_prop1_joint module_id="${module_id}" />
-  <!-- <xacro:actuator_prop2_joint module_id="${module_id}" /> -->
+  <xacro:actuator_prop2_joint module_id="${module_id}" />
 </xacro:macro>
 
 <!-- Team System -->
@@ -34,7 +34,7 @@
 <xacro:module module_id="3" />
 <xacro:module module_id="4" />
 
-<!-- <xacro:rigid_connection 
+<xacro:rigid_connection 
   parent="base_link" child="module1_body_link" 
   pos_x="0.215" pos_y="0.215" pos_z="0.0" z_psi="${pi/2}" />
 
@@ -48,27 +48,6 @@
   
 <xacro:rigid_connection 
   parent="base_link" child="module4_body_link" 
-  pos_x="-0.215" pos_y="-0.215" pos_z="0.0" z_psi="0" /> -->
-
-<!-- Module positions matching PX4 CA_MDx parameters -->
-<!-- MD0: Front-Left -->
-<xacro:rigid_connection
-  parent="base_link" child="module1_body_link"
-  pos_x="0.1675" pos_y="0.1825" pos_z="-0.02" z_psi="0" />
- 
-<!-- MD1: Front-Right -->
-<xacro:rigid_connection
-  parent="base_link" child="module2_body_link"
-  pos_x="0.1675" pos_y="-0.172" pos_z="-0.02" z_psi="0" />
- 
-<!-- MD2: Rear-Left -->
-<xacro:rigid_connection
-  parent="base_link" child="module3_body_link"
-  pos_x="-0.15" pos_y="0.1825" pos_z="-0.02" z_psi="0" />
- 
-<!-- MD3: Rear-Right -->
-<xacro:rigid_connection
-  parent="base_link" child="module4_body_link"
-  pos_x="-0.15" pos_y="-0.175" pos_z="-0.02" z_psi="0" />  
+  pos_x="-0.215" pos_y="-0.215" pos_z="0.0" z_psi="0" />
 
 </robot>

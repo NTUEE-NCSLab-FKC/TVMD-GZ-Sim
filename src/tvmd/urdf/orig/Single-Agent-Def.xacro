@@ -9,16 +9,16 @@
   <link name="module${module_id}_body_link">
     <inertial>
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
-      <mass value="0.1"/>
+      <mass value="0.50823179"/>
       <inertia ixx="0.01671968" iyy="0.00290137" izz="0.01758533" ixy="-0.00001217" iyz="-0.00003388" ixz="-0.00000326"/>
     </inertial>
-    <!-- <visual>
-      <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/base_link.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="black"/>
-    </visual> -->
+    </visual>
     <!-- <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
@@ -40,14 +40,14 @@
         <inertia ixx="0.00034948" iyy="0.00000164" izz="0.00034950" ixy="0.0" iyz="-0.00000002" ixz="0.0"/>
     </inertial>
     <visual>
-      <origin xyz="-0.001 -0.02 0.065" rpy=" 0 0 0"/>
+      <origin xyz="0.0 0.0 -0.068" rpy="0 0 0"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/Gimbal_Frame_1.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="copper"/>
+      <material name="gray"/>
     </visual>
     <collision name='module${module_id}_actuator_collision'>
-      <origin xyz="0.001 -0.018 0.065" rpy="0 0 0"/>
+      <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
       <geometry>
         <cylinder length="0.400" radius="0.010"/>
       </geometry>
@@ -65,12 +65,11 @@
         <inertia ixx="0.00029933" iyy="0.00030455" izz="0.00001575" ixy="-0.00000011" iyz="0.00000018" ixz="-0.00000476"/>
     </inertial>
     <visual>
-      <!-- <origin xyz="0.0 0.17 0.0" rpy="1.5708 0 0"/> -->
-      <origin xyz="0.0 0.185 0.0" rpy="1.5708 0 0"/>
+      <origin xyz="0.0 0.0 -0.068" rpy="0 0 0"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/Actuator_1.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="red"/>
+      <material name="gray"/>
     </visual>
   </link>
 
@@ -85,11 +84,11 @@
         <inertia ixx="0.00000702" iyy="0.00000005" izz="0.00000705" ixy="0.00000000" iyz="-0.00000009" ixz="0.00000000"/>
     </inertial>
     <visual>
-      <origin xyz="0.0 0 0.035" rpy="1.5708 0 0"/>
+      <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0 0"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/Propeller_9047.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="gold"/>
+      <material name="yellow"/>
     </visual>
     <collision name='module${module_id}_rotor_1_collision'>
       <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -102,7 +101,7 @@
   <xacro:gz_material joint_name="module${module_id}_prop1_link" color_name="Yellow" />
 </xacro:macro>
 
-<!-- <xacro:macro name="prop2_link" params="module_id">
+<xacro:macro name="prop2_link" params="module_id">
   <link name="module${module_id}_prop2_link">
     <inertial>
       <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
@@ -125,14 +124,14 @@
   </link>
 
   <xacro:gz_material joint_name="module${module_id}_prop2_link" color_name="Yellow" />
-</xacro:macro> -->
+</xacro:macro>
 
 <!-- Joints -->
 
 <!-- Y-Servo -->
 <xacro:macro name="body_gimbal_joint" params="module_id">
   <joint name="module${module_id}_body_gimbal_joint" type="revolute">
-    <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+    <origin xyz="0.0 0.0 0.068" rpy="0 0 0"/>
     <parent link="module${module_id}_body_link"/>
     <child link="module${module_id}_gimbal_link"/>
     <axis xyz="0.0 1.0 0.0"/>
@@ -174,7 +173,7 @@
 <!-- Propellers -->
 <xacro:macro name="actuator_prop1_joint" params="module_id">
   <joint name="module${module_id}_actuator_prop1_joint" type="continuous">
-    <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+    <origin xyz="0.0 0.0 0.0781" rpy="0 0 0"/>
     <parent link="module${module_id}_actuator_link"/>
     <child link="module${module_id}_prop1_link"/>
     <axis xyz="0.0 0.0 1.0"/>
@@ -186,26 +185,24 @@
 
   <xacro:gz_prop joint_name="module${module_id}_actuator_prop1_joint" 
     link_name="module${module_id}_prop1_link"
-    number_motor="${module_id-1}"/> 
+    number_motor="${module_id*2-2}"/>
 </xacro:macro>
 
-<!-- <xacro:macro name="actuator_prop2_joint" params="module_id"> -->
-  <!-- <joint name="module${module_id}_actuator_prop2_joint" type="continuous"> -->
-    <!-- <origin xyz="0.0 0.0 -0.0781" rpy="0 0 0"/> -->
-    <!-- <parent link="module${module_id}_actuator_link"/>
+<xacro:macro name="actuator_prop2_joint" params="module_id">
+  <joint name="module${module_id}_actuator_prop2_joint" type="continuous">
+    <origin xyz="0.0 0.0 -0.0781" rpy="0 0 0"/>
+    <parent link="module${module_id}_actuator_link"/>
     <child link="module${module_id}_prop2_link"/>
     <axis xyz="0.0 0.0 -1.0"/>
-    <limit effort="30000" velocity="10000.0" lower="-1e+16" upper="1e+16" /> -->
-
+    <limit effort="30000" velocity="10000.0" lower="-1e+16" upper="1e+16" />
     <!-- <limit lower="-1e+16" upper="1e+16" /> -->
+  </joint>
 
-  <!-- </joint> -->
-
-  <!-- <xacro:simple_transmission joint_name="module${module_id}_actuator_prop2_joint" />
+  <xacro:simple_transmission joint_name="module${module_id}_actuator_prop2_joint" />
 
   <xacro:gz_prop joint_name="module${module_id}_actuator_prop2_joint" 
     link_name="module${module_id}_prop2_link"
-    number_motor="${module_id*2-1}"/> -->
-<!-- </xacro:macro> -->
+    number_motor="${module_id*2-1}"/>
+</xacro:macro>
 
 </robot>

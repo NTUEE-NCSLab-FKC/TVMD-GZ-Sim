@@ -13,7 +13,7 @@
             <geometry>
             <mesh filename="package://tvmd/meshes/navigator/NavigatorModule-Sim.stl" scale="0.001 0.001 0.001"/>
             </geometry>
-            <material name="dark_blue"/>
+            <material name="titanium_purple"/>
         </visual>
         <collision>
             <origin xyz="0 0 0.05" rpy="0 0 ${pi/4}"/>

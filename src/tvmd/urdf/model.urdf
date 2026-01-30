@@ -7,8 +7,44 @@
   <material name="silver">
     <color rgba="0.700 0.700 0.700 1.000"/>
   </material>
+  <material name="aluminum">
+    <color rgba="0.800 0.800 0.820 1.000"/>
+  </material>
+  <material name="dark_metal">
+    <color rgba="0.300 0.300 0.320 1.000"/>
+  </material>
+  <material name="gold">
+    <color rgba="0.830 0.680 0.210 1.000"/>
+  </material>
+  <material name="copper">
+    <color rgba="0.720 0.450 0.200 1.000"/>
+  </material>
+  <material name="carbon_fiber">
+    <color rgba="0.150 0.150 0.150 1.000"/>
+  </material>
+  <material name="titanium_blue">
+    <color rgba="0.300 0.350 0.500 1.000"/>
+  </material>
+  <material name="titanium_purple">
+    <color rgba="0.450 0.350 0.500 1.000"/>
+  </material>
+  <material name="titanium_rainbow">
+    <color rgba="0.500 0.400 0.450 1.000"/>
+  </material>
+  <material name="red">
+    <color rgba="0.800 0.200 0.200 1.000"/>
+  </material>
+  <material name="orange">
+    <color rgba="1.000 0.500 0.000 1.000"/>
+  </material>
   <material name="yellow">
     <color rgba="1.000 1.000 0.000 1.000"/>
+  </material>
+  <material name="green">
+    <color rgba="0.200 0.800 0.200 1.000"/>
+  </material>
+  <material name="blue">
+    <color rgba="0.200 0.200 0.800 1.000"/>
   </material>
   <material name="black">
     <color rgba="0.000 0.000 0.000 1.000"/>
@@ -47,7 +83,46 @@
   </gazebo>
   <!-- Define Module Macros -->
   <!-- Links -->
+  <!-- <xacro:macro name="prop2_link" params="module_id">
+  <link name="module${module_id}_prop2_link">
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+      <mass value="0.00253778"/>
+      <inertia ixx="0.00000702" iyy="0.00000005" izz="0.00000705" ixy="0.00000000" iyz="-0.00000009" ixz="0.00000000"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0 0"/>
+      <geometry>
+        <mesh filename="package://tvmd/meshes/agent/Propeller_9047.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="yellow"/>
+    </visual>
+    <collision name='module${module_id}_rotor_2_collision'>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.005" radius="0.12"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <xacro:gz_material joint_name="module${module_id}_prop2_link" color_name="Yellow" />
+</xacro:macro> -->
   <!-- Joints -->
+  <!-- <xacro:macro name="actuator_prop2_joint" params="module_id"> -->
+  <!-- <joint name="module${module_id}_actuator_prop2_joint" type="continuous"> -->
+  <!-- <origin xyz="0.0 0.0 -0.0781" rpy="0 0 0"/> -->
+  <!-- <parent link="module${module_id}_actuator_link"/>
+    <child link="module${module_id}_prop2_link"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <limit effort="30000" velocity="10000.0" lower="-1e+16" upper="1e+16" /> -->
+  <!-- <limit lower="-1e+16" upper="1e+16" /> -->
+  <!-- </joint> -->
+  <!-- <xacro:simple_transmission joint_name="module${module_id}_actuator_prop2_joint" />
+
+  <xacro:gz_prop joint_name="module${module_id}_actuator_prop2_joint" 
+    link_name="module${module_id}_prop2_link"
+    number_motor="${module_id*2-1}"/> -->
+  <!-- </xacro:macro> -->
   <!-- Define Robot -->
   <!-- Team System -->
   <link name="base_link">
@@ -61,7 +136,7 @@
       <geometry>
         <mesh filename="package://tvmd/meshes/navigator/NavigatorModule-Sim.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="dark_blue"/>
+      <material name="titanium_purple"/>
     </visual>
     <collision>
       <origin rpy="0 0 0.7853981633974483" xyz="0 0 0.05"/>
@@ -101,16 +176,16 @@
   <link name="module1_body_link">
     <inertial>
       <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-      <mass value="0.50823179"/>
+      <mass value="0.1"/>
       <inertia ixx="0.01671968" ixy="-0.00001217" ixz="-0.00000326" iyy="0.00290137" iyz="-0.00003388" izz="0.01758533"/>
     </inertial>
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+    <!-- <visual>
+      <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/base_link.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="black"/>
-    </visual>
+    </visual> -->
     <!-- <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
@@ -134,14 +209,14 @@
       <inertia ixx="0.00034948" ixy="0.0" ixz="0.0" iyy="0.00000164" iyz="-0.00000002" izz="0.00034950"/>
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0.0 0.0 -0.068"/>
+      <origin rpy=" 0 0 0" xyz="-0.001 -0.02 0.065"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/Gimbal_Frame_1.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="gray"/>
+      <material name="copper"/>
     </visual>
     <collision name="module1_actuator_collision">
-      <origin rpy="1.5707963267948966 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0.001 -0.018 0.065"/>
       <geometry>
         <cylinder length="0.400" radius="0.010"/>
       </geometry>
@@ -162,11 +237,12 @@
       <inertia ixx="0.00029933" ixy="-0.00000011" ixz="-0.00000476" iyy="0.00030455" iyz="0.00000018" izz="0.00001575"/>
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0.0 0.0 -0.068"/>
+      <!-- <origin xyz="0.0 0.17 0.0" rpy="1.5708 0 0"/> -->
+      <origin rpy="1.5708 0 0" xyz="0.0 0.185 0.0"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/Actuator_1.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="gray"/>
+      <material name="red"/>
     </visual>
   </link>
   <gazebo reference="module1_actuator_link">
@@ -184,11 +260,11 @@
       <inertia ixx="0.00000702" ixy="0.00000000" ixz="0.00000000" iyy="0.00000005" iyz="-0.00000009" izz="0.00000705"/>
     </inertial>
     <visual>
-      <origin rpy="1.5707963267948966 0 0" xyz="0.0 0.0 0.0"/>
+      <origin rpy="1.5708 0 0" xyz="0.0 0 0.035"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/Propeller_9047.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="yellow"/>
+      <material name="gold"/>
     </visual>
     <collision name="module1_rotor_1_collision">
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -205,40 +281,14 @@
     <selfCollide>false</selfCollide>
     <gravity>true</gravity>
   </gazebo>
-  <link name="module1_prop2_link">
-    <inertial>
-      <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-      <mass value="0.00253778"/>
-      <inertia ixx="0.00000702" ixy="0.00000000" ixz="0.00000000" iyy="0.00000005" iyz="-0.00000009" izz="0.00000705"/>
-    </inertial>
-    <visual>
-      <origin rpy="1.5707963267948966 0 0" xyz="0.0 0.0 0.0"/>
-      <geometry>
-        <mesh filename="package://tvmd/meshes/agent/Propeller_9047.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-      <material name="yellow"/>
-    </visual>
-    <collision name="module1_rotor_2_collision">
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <cylinder length="0.005" radius="0.12"/>
-      </geometry>
-    </collision>
-  </link>
-  <gazebo reference="module1_prop2_link">
-    <material>Gazebo/Yellow</material>
-    <!-- Frictions -->
-    <mu1>0.2</mu1>
-    <mu2>0.2</mu2>
-    <selfCollide>false</selfCollide>
-    <gravity>true</gravity>
-  </gazebo>
+  <!-- <xacro:prop2_link module_id="${module_id}" /> -->
   <joint name="module1_body_gimbal_joint" type="revolute">
-    <origin rpy="0 0 0" xyz="0.0 0.0 0.068"/>
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
     <parent link="module1_body_link"/>
     <child link="module1_gimbal_link"/>
     <axis xyz="0.0 1.0 0.0"/>
-    <limit effort="30000" lower="-1.5707963267948966" upper="1.5707963267948966" velocity="10.0"/>
+    <!-- <limit effort="30000" velocity="10.0" lower="${-pi/2}" upper="${pi/2}" /> -->
+    <limit effort="30000" lower="-0.7853981633974483" upper="0.7853981633974483" velocity="10.0"/>
     <dynamics damping="0.000"/>
     <physics>
       <ode implicit_spring_damper="0"/>
@@ -267,7 +317,8 @@
     <parent link="module1_gimbal_link"/>
     <child link="module1_actuator_link"/>
     <axis xyz="1.0 0.0 0.0"/>
-    <limit effort="30000" lower="-0.5235987755982988" upper="0.5235987755982988" velocity="10.0"/>
+    <!-- <limit effort="30000" velocity="10.0" lower="${-pi/6}" upper="${pi/6}" /> -->
+    <limit effort="30000" lower="-0.349" upper="0.349" velocity="10.0"/>
     <dynamics damping="0.000"/>
     <physics>
       <ode implicit_spring_damper="0"/>
@@ -292,7 +343,7 @@
     </plugin>
   </gazebo>
   <joint name="module1_actuator_prop1_joint" type="continuous">
-    <origin rpy="0 0 0" xyz="0.0 0.0 0.0781"/>
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
     <parent link="module1_actuator_link"/>
     <child link="module1_prop1_link"/>
     <axis xyz="0.0 0.0 1.0"/>
@@ -327,55 +378,20 @@
       <motorType>velocity</motorType>
     </plugin>
   </gazebo>
-  <joint name="module1_actuator_prop2_joint" type="continuous">
-    <origin rpy="0 0 0" xyz="0.0 0.0 -0.0781"/>
-    <parent link="module1_actuator_link"/>
-    <child link="module1_prop2_link"/>
-    <axis xyz="0.0 0.0 -1.0"/>
-    <limit effort="30000" lower="-1e+16" upper="1e+16" velocity="10000.0"/>
-    <!-- <limit lower="-1e+16" upper="1e+16" /> -->
-  </joint>
-  <transmission name="revolute_module1_actuator_prop2_joint">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="module1_actuator_prop2_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="actuator_module1_actuator_prop2_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <gazebo>
-    <plugin filename="gz-sim-multicopter-motor-model-system" name="gz::sim::systems::MulticopterMotorModel">
-      <jointName>module1_actuator_prop2_joint</jointName>
-      <linkName>module1_prop2_link</linkName>
-      <turningDirection>ccw</turningDirection>
-      <timeConstantUp>0.0125</timeConstantUp>
-      <timeConstantDown>0.025</timeConstantDown>
-      <maxRotVelocity>1500</maxRotVelocity>
-      <motorConstant>2e-05</motorConstant>
-      <momentConstant>0.06</momentConstant>
-      <commandSubTopic>command/motor_speed</commandSubTopic>
-      <motorNumber>1</motorNumber>
-      <rotorDragCoefficient>0.000106428</rotorDragCoefficient>
-      <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
-      <rotorVelocitySlowdownSim>20</rotorVelocitySlowdownSim>
-      <motorType>velocity</motorType>
-    </plugin>
-  </gazebo>
+  <!-- <xacro:actuator_prop2_joint module_id="${module_id}" /> -->
   <link name="module2_body_link">
     <inertial>
       <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-      <mass value="0.50823179"/>
+      <mass value="0.1"/>
       <inertia ixx="0.01671968" ixy="-0.00001217" ixz="-0.00000326" iyy="0.00290137" iyz="-0.00003388" izz="0.01758533"/>
     </inertial>
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+    <!-- <visual>
+      <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/base_link.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="black"/>
-    </visual>
+    </visual> -->
     <!-- <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
@@ -399,14 +415,14 @@
       <inertia ixx="0.00034948" ixy="0.0" ixz="0.0" iyy="0.00000164" iyz="-0.00000002" izz="0.00034950"/>
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0.0 0.0 -0.068"/>
+      <origin rpy=" 0 0 0" xyz="-0.001 -0.02 0.065"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/Gimbal_Frame_1.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="gray"/>
+      <material name="copper"/>
     </visual>
     <collision name="module2_actuator_collision">
-      <origin rpy="1.5707963267948966 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0.001 -0.018 0.065"/>
       <geometry>
         <cylinder length="0.400" radius="0.010"/>
       </geometry>
@@ -427,11 +443,12 @@
       <inertia ixx="0.00029933" ixy="-0.00000011" ixz="-0.00000476" iyy="0.00030455" iyz="0.00000018" izz="0.00001575"/>
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0.0 0.0 -0.068"/>
+      <!-- <origin xyz="0.0 0.17 0.0" rpy="1.5708 0 0"/> -->
+      <origin rpy="1.5708 0 0" xyz="0.0 0.185 0.0"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/Actuator_1.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="gray"/>
+      <material name="red"/>
     </visual>
   </link>
   <gazebo reference="module2_actuator_link">
@@ -449,11 +466,11 @@
       <inertia ixx="0.00000702" ixy="0.00000000" ixz="0.00000000" iyy="0.00000005" iyz="-0.00000009" izz="0.00000705"/>
     </inertial>
     <visual>
-      <origin rpy="1.5707963267948966 0 0" xyz="0.0 0.0 0.0"/>
+      <origin rpy="1.5708 0 0" xyz="0.0 0 0.035"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/Propeller_9047.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="yellow"/>
+      <material name="gold"/>
     </visual>
     <collision name="module2_rotor_1_collision">
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -470,40 +487,14 @@
     <selfCollide>false</selfCollide>
     <gravity>true</gravity>
   </gazebo>
-  <link name="module2_prop2_link">
-    <inertial>
-      <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-      <mass value="0.00253778"/>
-      <inertia ixx="0.00000702" ixy="0.00000000" ixz="0.00000000" iyy="0.00000005" iyz="-0.00000009" izz="0.00000705"/>
-    </inertial>
-    <visual>
-      <origin rpy="1.5707963267948966 0 0" xyz="0.0 0.0 0.0"/>
-      <geometry>
-        <mesh filename="package://tvmd/meshes/agent/Propeller_9047.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-      <material name="yellow"/>
-    </visual>
-    <collision name="module2_rotor_2_collision">
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <cylinder length="0.005" radius="0.12"/>
-      </geometry>
-    </collision>
-  </link>
-  <gazebo reference="module2_prop2_link">
-    <material>Gazebo/Yellow</material>
-    <!-- Frictions -->
-    <mu1>0.2</mu1>
-    <mu2>0.2</mu2>
-    <selfCollide>false</selfCollide>
-    <gravity>true</gravity>
-  </gazebo>
+  <!-- <xacro:prop2_link module_id="${module_id}" /> -->
   <joint name="module2_body_gimbal_joint" type="revolute">
-    <origin rpy="0 0 0" xyz="0.0 0.0 0.068"/>
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
     <parent link="module2_body_link"/>
     <child link="module2_gimbal_link"/>
     <axis xyz="0.0 1.0 0.0"/>
-    <limit effort="30000" lower="-1.5707963267948966" upper="1.5707963267948966" velocity="10.0"/>
+    <!-- <limit effort="30000" velocity="10.0" lower="${-pi/2}" upper="${pi/2}" /> -->
+    <limit effort="30000" lower="-0.7853981633974483" upper="0.7853981633974483" velocity="10.0"/>
     <dynamics damping="0.000"/>
     <physics>
       <ode implicit_spring_damper="0"/>
@@ -532,7 +523,8 @@
     <parent link="module2_gimbal_link"/>
     <child link="module2_actuator_link"/>
     <axis xyz="1.0 0.0 0.0"/>
-    <limit effort="30000" lower="-0.5235987755982988" upper="0.5235987755982988" velocity="10.0"/>
+    <!-- <limit effort="30000" velocity="10.0" lower="${-pi/6}" upper="${pi/6}" /> -->
+    <limit effort="30000" lower="-0.349" upper="0.349" velocity="10.0"/>
     <dynamics damping="0.000"/>
     <physics>
       <ode implicit_spring_damper="0"/>
@@ -557,7 +549,7 @@
     </plugin>
   </gazebo>
   <joint name="module2_actuator_prop1_joint" type="continuous">
-    <origin rpy="0 0 0" xyz="0.0 0.0 0.0781"/>
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
     <parent link="module2_actuator_link"/>
     <child link="module2_prop1_link"/>
     <axis xyz="0.0 0.0 1.0"/>
@@ -585,62 +577,27 @@
       <motorConstant>2e-05</motorConstant>
       <momentConstant>0.06</momentConstant>
       <commandSubTopic>command/motor_speed</commandSubTopic>
-      <motorNumber>2</motorNumber>
+      <motorNumber>1</motorNumber>
       <rotorDragCoefficient>0.000106428</rotorDragCoefficient>
       <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
       <rotorVelocitySlowdownSim>20</rotorVelocitySlowdownSim>
       <motorType>velocity</motorType>
     </plugin>
   </gazebo>
-  <joint name="module2_actuator_prop2_joint" type="continuous">
-    <origin rpy="0 0 0" xyz="0.0 0.0 -0.0781"/>
-    <parent link="module2_actuator_link"/>
-    <child link="module2_prop2_link"/>
-    <axis xyz="0.0 0.0 -1.0"/>
-    <limit effort="30000" lower="-1e+16" upper="1e+16" velocity="10000.0"/>
-    <!-- <limit lower="-1e+16" upper="1e+16" /> -->
-  </joint>
-  <transmission name="revolute_module2_actuator_prop2_joint">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="module2_actuator_prop2_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="actuator_module2_actuator_prop2_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <gazebo>
-    <plugin filename="gz-sim-multicopter-motor-model-system" name="gz::sim::systems::MulticopterMotorModel">
-      <jointName>module2_actuator_prop2_joint</jointName>
-      <linkName>module2_prop2_link</linkName>
-      <turningDirection>ccw</turningDirection>
-      <timeConstantUp>0.0125</timeConstantUp>
-      <timeConstantDown>0.025</timeConstantDown>
-      <maxRotVelocity>1500</maxRotVelocity>
-      <motorConstant>2e-05</motorConstant>
-      <momentConstant>0.06</momentConstant>
-      <commandSubTopic>command/motor_speed</commandSubTopic>
-      <motorNumber>3</motorNumber>
-      <rotorDragCoefficient>0.000106428</rotorDragCoefficient>
-      <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
-      <rotorVelocitySlowdownSim>20</rotorVelocitySlowdownSim>
-      <motorType>velocity</motorType>
-    </plugin>
-  </gazebo>
+  <!-- <xacro:actuator_prop2_joint module_id="${module_id}" /> -->
   <link name="module3_body_link">
     <inertial>
       <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-      <mass value="0.50823179"/>
+      <mass value="0.1"/>
       <inertia ixx="0.01671968" ixy="-0.00001217" ixz="-0.00000326" iyy="0.00290137" iyz="-0.00003388" izz="0.01758533"/>
     </inertial>
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+    <!-- <visual>
+      <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/base_link.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="black"/>
-    </visual>
+    </visual> -->
     <!-- <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
@@ -664,14 +621,14 @@
       <inertia ixx="0.00034948" ixy="0.0" ixz="0.0" iyy="0.00000164" iyz="-0.00000002" izz="0.00034950"/>
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0.0 0.0 -0.068"/>
+      <origin rpy=" 0 0 0" xyz="-0.001 -0.02 0.065"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/Gimbal_Frame_1.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="gray"/>
+      <material name="copper"/>
     </visual>
     <collision name="module3_actuator_collision">
-      <origin rpy="1.5707963267948966 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0.001 -0.018 0.065"/>
       <geometry>
         <cylinder length="0.400" radius="0.010"/>
       </geometry>
@@ -692,11 +649,12 @@
       <inertia ixx="0.00029933" ixy="-0.00000011" ixz="-0.00000476" iyy="0.00030455" iyz="0.00000018" izz="0.00001575"/>
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0.0 0.0 -0.068"/>
+      <!-- <origin xyz="0.0 0.17 0.0" rpy="1.5708 0 0"/> -->
+      <origin rpy="1.5708 0 0" xyz="0.0 0.185 0.0"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/Actuator_1.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="gray"/>
+      <material name="red"/>
     </visual>
   </link>
   <gazebo reference="module3_actuator_link">
@@ -714,11 +672,11 @@
       <inertia ixx="0.00000702" ixy="0.00000000" ixz="0.00000000" iyy="0.00000005" iyz="-0.00000009" izz="0.00000705"/>
     </inertial>
     <visual>
-      <origin rpy="1.5707963267948966 0 0" xyz="0.0 0.0 0.0"/>
+      <origin rpy="1.5708 0 0" xyz="0.0 0 0.035"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/Propeller_9047.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="yellow"/>
+      <material name="gold"/>
     </visual>
     <collision name="module3_rotor_1_collision">
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -735,40 +693,14 @@
     <selfCollide>false</selfCollide>
     <gravity>true</gravity>
   </gazebo>
-  <link name="module3_prop2_link">
-    <inertial>
-      <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-      <mass value="0.00253778"/>
-      <inertia ixx="0.00000702" ixy="0.00000000" ixz="0.00000000" iyy="0.00000005" iyz="-0.00000009" izz="0.00000705"/>
-    </inertial>
-    <visual>
-      <origin rpy="1.5707963267948966 0 0" xyz="0.0 0.0 0.0"/>
-      <geometry>
-        <mesh filename="package://tvmd/meshes/agent/Propeller_9047.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-      <material name="yellow"/>
-    </visual>
-    <collision name="module3_rotor_2_collision">
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <cylinder length="0.005" radius="0.12"/>
-      </geometry>
-    </collision>
-  </link>
-  <gazebo reference="module3_prop2_link">
-    <material>Gazebo/Yellow</material>
-    <!-- Frictions -->
-    <mu1>0.2</mu1>
-    <mu2>0.2</mu2>
-    <selfCollide>false</selfCollide>
-    <gravity>true</gravity>
-  </gazebo>
+  <!-- <xacro:prop2_link module_id="${module_id}" /> -->
   <joint name="module3_body_gimbal_joint" type="revolute">
-    <origin rpy="0 0 0" xyz="0.0 0.0 0.068"/>
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
     <parent link="module3_body_link"/>
     <child link="module3_gimbal_link"/>
     <axis xyz="0.0 1.0 0.0"/>
-    <limit effort="30000" lower="-1.5707963267948966" upper="1.5707963267948966" velocity="10.0"/>
+    <!-- <limit effort="30000" velocity="10.0" lower="${-pi/2}" upper="${pi/2}" /> -->
+    <limit effort="30000" lower="-0.7853981633974483" upper="0.7853981633974483" velocity="10.0"/>
     <dynamics damping="0.000"/>
     <physics>
       <ode implicit_spring_damper="0"/>
@@ -797,7 +729,8 @@
     <parent link="module3_gimbal_link"/>
     <child link="module3_actuator_link"/>
     <axis xyz="1.0 0.0 0.0"/>
-    <limit effort="30000" lower="-0.5235987755982988" upper="0.5235987755982988" velocity="10.0"/>
+    <!-- <limit effort="30000" velocity="10.0" lower="${-pi/6}" upper="${pi/6}" /> -->
+    <limit effort="30000" lower="-0.349" upper="0.349" velocity="10.0"/>
     <dynamics damping="0.000"/>
     <physics>
       <ode implicit_spring_damper="0"/>
@@ -822,7 +755,7 @@
     </plugin>
   </gazebo>
   <joint name="module3_actuator_prop1_joint" type="continuous">
-    <origin rpy="0 0 0" xyz="0.0 0.0 0.0781"/>
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
     <parent link="module3_actuator_link"/>
     <child link="module3_prop1_link"/>
     <axis xyz="0.0 0.0 1.0"/>
@@ -850,62 +783,27 @@
       <motorConstant>2e-05</motorConstant>
       <momentConstant>0.06</momentConstant>
       <commandSubTopic>command/motor_speed</commandSubTopic>
-      <motorNumber>4</motorNumber>
+      <motorNumber>2</motorNumber>
       <rotorDragCoefficient>0.000106428</rotorDragCoefficient>
       <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
       <rotorVelocitySlowdownSim>20</rotorVelocitySlowdownSim>
       <motorType>velocity</motorType>
     </plugin>
   </gazebo>
-  <joint name="module3_actuator_prop2_joint" type="continuous">
-    <origin rpy="0 0 0" xyz="0.0 0.0 -0.0781"/>
-    <parent link="module3_actuator_link"/>
-    <child link="module3_prop2_link"/>
-    <axis xyz="0.0 0.0 -1.0"/>
-    <limit effort="30000" lower="-1e+16" upper="1e+16" velocity="10000.0"/>
-    <!-- <limit lower="-1e+16" upper="1e+16" /> -->
-  </joint>
-  <transmission name="revolute_module3_actuator_prop2_joint">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="module3_actuator_prop2_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="actuator_module3_actuator_prop2_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <gazebo>
-    <plugin filename="gz-sim-multicopter-motor-model-system" name="gz::sim::systems::MulticopterMotorModel">
-      <jointName>module3_actuator_prop2_joint</jointName>
-      <linkName>module3_prop2_link</linkName>
-      <turningDirection>ccw</turningDirection>
-      <timeConstantUp>0.0125</timeConstantUp>
-      <timeConstantDown>0.025</timeConstantDown>
-      <maxRotVelocity>1500</maxRotVelocity>
-      <motorConstant>2e-05</motorConstant>
-      <momentConstant>0.06</momentConstant>
-      <commandSubTopic>command/motor_speed</commandSubTopic>
-      <motorNumber>5</motorNumber>
-      <rotorDragCoefficient>0.000106428</rotorDragCoefficient>
-      <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
-      <rotorVelocitySlowdownSim>20</rotorVelocitySlowdownSim>
-      <motorType>velocity</motorType>
-    </plugin>
-  </gazebo>
+  <!-- <xacro:actuator_prop2_joint module_id="${module_id}" /> -->
   <link name="module4_body_link">
     <inertial>
       <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-      <mass value="0.50823179"/>
+      <mass value="0.1"/>
       <inertia ixx="0.01671968" ixy="-0.00001217" ixz="-0.00000326" iyy="0.00290137" iyz="-0.00003388" izz="0.01758533"/>
     </inertial>
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+    <!-- <visual>
+      <origin xyz="0 0 0" rpy="-1.5708 0 0"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/base_link.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="black"/>
-    </visual>
+    </visual> -->
     <!-- <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
@@ -929,14 +827,14 @@
       <inertia ixx="0.00034948" ixy="0.0" ixz="0.0" iyy="0.00000164" iyz="-0.00000002" izz="0.00034950"/>
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0.0 0.0 -0.068"/>
+      <origin rpy=" 0 0 0" xyz="-0.001 -0.02 0.065"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/Gimbal_Frame_1.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="gray"/>
+      <material name="copper"/>
     </visual>
     <collision name="module4_actuator_collision">
-      <origin rpy="1.5707963267948966 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0.001 -0.018 0.065"/>
       <geometry>
         <cylinder length="0.400" radius="0.010"/>
       </geometry>
@@ -957,11 +855,12 @@
       <inertia ixx="0.00029933" ixy="-0.00000011" ixz="-0.00000476" iyy="0.00030455" iyz="0.00000018" izz="0.00001575"/>
     </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0.0 0.0 -0.068"/>
+      <!-- <origin xyz="0.0 0.17 0.0" rpy="1.5708 0 0"/> -->
+      <origin rpy="1.5708 0 0" xyz="0.0 0.185 0.0"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/Actuator_1.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="gray"/>
+      <material name="red"/>
     </visual>
   </link>
   <gazebo reference="module4_actuator_link">
@@ -979,11 +878,11 @@
       <inertia ixx="0.00000702" ixy="0.00000000" ixz="0.00000000" iyy="0.00000005" iyz="-0.00000009" izz="0.00000705"/>
     </inertial>
     <visual>
-      <origin rpy="1.5707963267948966 0 0" xyz="0.0 0.0 0.0"/>
+      <origin rpy="1.5708 0 0" xyz="0.0 0 0.035"/>
       <geometry>
         <mesh filename="package://tvmd/meshes/agent/Propeller_9047.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="yellow"/>
+      <material name="gold"/>
     </visual>
     <collision name="module4_rotor_1_collision">
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -1000,40 +899,14 @@
     <selfCollide>false</selfCollide>
     <gravity>true</gravity>
   </gazebo>
-  <link name="module4_prop2_link">
-    <inertial>
-      <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
-      <mass value="0.00253778"/>
-      <inertia ixx="0.00000702" ixy="0.00000000" ixz="0.00000000" iyy="0.00000005" iyz="-0.00000009" izz="0.00000705"/>
-    </inertial>
-    <visual>
-      <origin rpy="1.5707963267948966 0 0" xyz="0.0 0.0 0.0"/>
-      <geometry>
-        <mesh filename="package://tvmd/meshes/agent/Propeller_9047.stl" scale="0.001 0.001 0.001"/>
-      </geometry>
-      <material name="yellow"/>
-    </visual>
-    <collision name="module4_rotor_2_collision">
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <cylinder length="0.005" radius="0.12"/>
-      </geometry>
-    </collision>
-  </link>
-  <gazebo reference="module4_prop2_link">
-    <material>Gazebo/Yellow</material>
-    <!-- Frictions -->
-    <mu1>0.2</mu1>
-    <mu2>0.2</mu2>
-    <selfCollide>false</selfCollide>
-    <gravity>true</gravity>
-  </gazebo>
+  <!-- <xacro:prop2_link module_id="${module_id}" /> -->
   <joint name="module4_body_gimbal_joint" type="revolute">
-    <origin rpy="0 0 0" xyz="0.0 0.0 0.068"/>
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
     <parent link="module4_body_link"/>
     <child link="module4_gimbal_link"/>
     <axis xyz="0.0 1.0 0.0"/>
-    <limit effort="30000" lower="-1.5707963267948966" upper="1.5707963267948966" velocity="10.0"/>
+    <!-- <limit effort="30000" velocity="10.0" lower="${-pi/2}" upper="${pi/2}" /> -->
+    <limit effort="30000" lower="-0.7853981633974483" upper="0.7853981633974483" velocity="10.0"/>
     <dynamics damping="0.000"/>
     <physics>
       <ode implicit_spring_damper="0"/>
@@ -1062,7 +935,8 @@
     <parent link="module4_gimbal_link"/>
     <child link="module4_actuator_link"/>
     <axis xyz="1.0 0.0 0.0"/>
-    <limit effort="30000" lower="-0.5235987755982988" upper="0.5235987755982988" velocity="10.0"/>
+    <!-- <limit effort="30000" velocity="10.0" lower="${-pi/6}" upper="${pi/6}" /> -->
+    <limit effort="30000" lower="-0.349" upper="0.349" velocity="10.0"/>
     <dynamics damping="0.000"/>
     <physics>
       <ode implicit_spring_damper="0"/>
@@ -1087,7 +961,7 @@
     </plugin>
   </gazebo>
   <joint name="module4_actuator_prop1_joint" type="continuous">
-    <origin rpy="0 0 0" xyz="0.0 0.0 0.0781"/>
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
     <parent link="module4_actuator_link"/>
     <child link="module4_prop1_link"/>
     <axis xyz="0.0 0.0 1.0"/>
@@ -1115,69 +989,48 @@
       <motorConstant>2e-05</motorConstant>
       <momentConstant>0.06</momentConstant>
       <commandSubTopic>command/motor_speed</commandSubTopic>
-      <motorNumber>6</motorNumber>
+      <motorNumber>3</motorNumber>
       <rotorDragCoefficient>0.000106428</rotorDragCoefficient>
       <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
       <rotorVelocitySlowdownSim>20</rotorVelocitySlowdownSim>
       <motorType>velocity</motorType>
     </plugin>
   </gazebo>
-  <joint name="module4_actuator_prop2_joint" type="continuous">
-    <origin rpy="0 0 0" xyz="0.0 0.0 -0.0781"/>
-    <parent link="module4_actuator_link"/>
-    <child link="module4_prop2_link"/>
-    <axis xyz="0.0 0.0 -1.0"/>
-    <limit effort="30000" lower="-1e+16" upper="1e+16" velocity="10000.0"/>
-    <!-- <limit lower="-1e+16" upper="1e+16" /> -->
-  </joint>
-  <transmission name="revolute_module4_actuator_prop2_joint">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="module4_actuator_prop2_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="actuator_module4_actuator_prop2_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <gazebo>
-    <plugin filename="gz-sim-multicopter-motor-model-system" name="gz::sim::systems::MulticopterMotorModel">
-      <jointName>module4_actuator_prop2_joint</jointName>
-      <linkName>module4_prop2_link</linkName>
-      <turningDirection>ccw</turningDirection>
-      <timeConstantUp>0.0125</timeConstantUp>
-      <timeConstantDown>0.025</timeConstantDown>
-      <maxRotVelocity>1500</maxRotVelocity>
-      <motorConstant>2e-05</motorConstant>
-      <momentConstant>0.06</momentConstant>
-      <commandSubTopic>command/motor_speed</commandSubTopic>
-      <motorNumber>7</motorNumber>
-      <rotorDragCoefficient>0.000106428</rotorDragCoefficient>
-      <rollingMomentCoefficient>1e-06</rollingMomentCoefficient>
-      <rotorVelocitySlowdownSim>20</rotorVelocitySlowdownSim>
-      <motorType>velocity</motorType>
-    </plugin>
-  </gazebo>
+  <!-- <xacro:actuator_prop2_joint module_id="${module_id}" /> -->
+  <!-- <xacro:rigid_connection 
+  parent="base_link" child="module1_body_link" 
+  pos_x="0.215" pos_y="0.215" pos_z="0.0" z_psi="${pi/2}" />
+
+<xacro:rigid_connection 
+  parent="base_link" child="module2_body_link" 
+  pos_x="0.215" pos_y="-0.215" pos_z="0.0" z_psi="${pi/2}" />
+
+<xacro:rigid_connection 
+  parent="base_link" child="module3_body_link" 
+  pos_x="-0.215" pos_y="0.215" pos_z="0.0" z_psi="0" />
+  
+<xacro:rigid_connection 
+  parent="base_link" child="module4_body_link" 
+  pos_x="-0.215" pos_y="-0.215" pos_z="0.0" z_psi="0" /> -->
   <joint name="rigid_base_link_module1_body_link" type="fixed">
-    <origin rpy="0 0 1.5707963267948966" xyz="0.215 0.215 0.0"/>
+    <origin rpy="0 0 0" xyz="0.1675 0.1825 -0.02"/>
     <parent link="base_link"/>
     <child link="module1_body_link"/>
   </joint>
   <joint name="rigid_base_link_module2_body_link" type="fixed">
-    <origin rpy="0 0 1.5707963267948966" xyz="0.215 -0.215 0.0"/>
+    <origin rpy="0 0 0" xyz="0.1675 -0.172 -0.02"/>
     <parent link="base_link"/>
     <child link="module2_body_link"/>
   </joint>
   <joint name="rigid_base_link_module3_body_link" type="fixed">
-    <origin rpy="0 0 0" xyz="-0.215 0.215 0.0"/>
+    <origin rpy="0 0 0" xyz="-0.15 0.1825 -0.02"/>
     <parent link="base_link"/>
     <child link="module3_body_link"/>
   </joint>
   <joint name="rigid_base_link_module4_body_link" type="fixed">
-    <origin rpy="0 0 0" xyz="-0.215 -0.215 0.0"/>
+    <origin rpy="0 0 0" xyz="-0.15 -0.175 -0.02"/>
     <parent link="base_link"/>
     <child link="module4_body_link"/>
   </joint>
-  <!-- <static>0</static> -->
 </robot>
 
