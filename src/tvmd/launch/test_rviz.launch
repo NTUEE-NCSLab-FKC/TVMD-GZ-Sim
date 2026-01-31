@@ -1,0 +1,40 @@
+<launch>
+  <!--
+    RViz 測試 Launch 文件
+
+    使用方式:
+      roslaunch tvmd test_rviz.launch
+      roslaunch tvmd test_rviz.launch test_mode:=interactive
+
+    參數:
+      - test_mode: 'auto' (自動場景) 或 'interactive' (手動控制)
+      - rate: 發布頻率 (Hz)
+  -->
+
+  <!-- 參數 -->
+  <arg name="model" default="$(find tvmd)/urdf/tvmd.xacro"/>
+  <arg name="gui" default="true"/>
+  <arg name="rvizconfig" default="$(find tvmd)/launch/urdf.rviz"/>
+  <arg name="test_mode" default="auto"/>
+  <arg name="rate" default="50"/>
+
+  <!-- 載入機器人描述 -->
+  <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
+  <param name="use_gui" value="$(arg gui)"/>
+
+  <!-- Joint State Republisher (訂閱 PX4 topics 並發布 joint states) -->
+  <node name="joint_state_republisher" pkg="tvmd" type="republisher.py" output="screen"/>
+
+  <!-- Robot State Publisher (將 joint states 轉換為 TF) -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+
+  <!-- RViz 可視化 -->
+  <node name="rviz" pkg="rviz" args="-d $(arg rvizconfig)" type="rviz" required="true"/>
+
+  <!-- 測試數據發布器 -->
+  <node name="test_rviz_publisher" pkg="tvmd" type="test_rviz_publisher.py" output="screen">
+    <param name="rate" value="$(arg rate)"/>
+    <param name="test_mode" value="all"/>
+  </node>
+
+</launch>
