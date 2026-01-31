@@ -82,8 +82,8 @@ class MetaDataMarker:
             self.marker_array.markers[aid].scale.z = 0.01
 
             # How long the object should last before being automatically deleted.  0 means forever
-            # self.marker_array.markers[aid].lifetime = 0.0
-            
+            self.marker_array.markers[aid].lifetime = rospy.Duration(0)
+
             # If this marker should be frame-locked, i.e. retransformed into its frame every timestep
             self.marker_array.markers[aid].frame_locked = True
 
@@ -128,6 +128,8 @@ class MetaDataMarker:
         marker.color.g = 0.0
         marker.color.b = 1.0
 
+        marker.lifetime = rospy.Duration(0)  # 0 means forever
+
         marker.points = [Point(), Point()]
         marker.points[0].x = 0.0
         marker.points[0].y = 0.0
@@ -140,7 +142,7 @@ class MetaDataMarker:
 
     def __init__(self, _num_module: int) -> None:
         self.z_offset = 0.065
-        self.scales = 0.1
+        self.scales = 0.02  # Scale factor for pseudo-force visualization (meters per Newton)
         self.num_modules = _num_module
         self.marker_array = MarkerArray()
 
