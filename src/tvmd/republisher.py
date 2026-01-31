@@ -183,9 +183,14 @@ class MetaDataMarker:
         active_agent = [True for i in range(self.num_modules)]
         c = 0
         for iter in range(self.num_modules):
-            if sat_indices[iter] < 0 or sat_indices[iter] >= self.num_modules or c >= 1.0:
-                # End of allocation
-                active_agent = [False for i in range(self.num_modules)]
+            # Check if allocation is complete (c >= 1.0 means 100% allocated)
+            if c >= 1.0:
+                # End of allocation - copy previous points
+                for aid in range(self.num_modules):
+                    self.marker_array.markers[aid].points[iter+1].x = self.marker_array.markers[aid].points[iter].x
+                    self.marker_array.markers[aid].points[iter+1].y = self.marker_array.markers[aid].points[iter].y
+                    self.marker_array.markers[aid].points[iter+1].z = self.marker_array.markers[aid].points[iter].z
+                continue
 
             for aid in range(self.num_modules):
                 if active_agent[aid]:
@@ -199,8 +204,8 @@ class MetaDataMarker:
                     self.marker_array.markers[aid].points[iter+1].z = self.marker_array.markers[aid].points[iter].z
 
             c += d[iter]
-            
-            # Mark as saturated
+
+            # Mark as saturated (only if valid index)
             if sat_indices[iter] >= 0 and sat_indices[iter] < self.num_modules:
                 active_agent[sat_indices[iter]] = False
                 
