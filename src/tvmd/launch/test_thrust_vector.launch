@@ -1,0 +1,41 @@
+<launch>
+  <!--
+    推力向量測試 Launch 文件
+
+    使用方式:
+      roslaunch tvmd test_thrust_vector.launch
+      roslaunch tvmd test_thrust_vector.launch mode:=static
+
+    功能:
+      給定各模組的推力向量 [fx, fy, fz]
+      → 自動計算對應的關節角度 (eta_x, eta_y)
+      → 自動計算機體的 wrench (force + torque)
+      → 在 RViz 上顯示
+
+    參數:
+      - mode: 'demo' (循環展示) 或 'static' (固定配置)
+  -->
+
+  <!-- 參數 -->
+  <arg name="model" default="$(find tvmd)/urdf/tvmd.xacro"/>
+  <arg name="rvizconfig" default="$(find tvmd)/launch/urdf.rviz"/>
+  <arg name="mode" default="demo"/>
+  <arg name="rate" default="50"/>
+
+  <!-- 載入機器人描述 -->
+  <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
+
+  <!-- Joint State Republisher -->
+  <node name="joint_state_republisher" pkg="tvmd" type="republisher.py" output="screen"/>
+
+  <!-- Robot State Publisher -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+
+  <!-- RViz -->
+  <node name="rviz" pkg="rviz" args="-d $(arg rvizconfig)" type="rviz" required="true"/>
+
+  <!-- 推力向量測試發布器 -->
+  <node name="test_thrust_vector" pkg="tvmd" type="test_thrust_vector.py" output="screen"
+        args="--mode $(arg mode) --rate $(arg rate)"/>
+
+</launch>
