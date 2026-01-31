@@ -221,6 +221,12 @@ class MetaDataMarker:
         self.__update_arrow(self.wfd_idx, force)
         self.__update_arrow(self.wtd_idx, torque)
 
+    def update_timestamps(self) -> None:
+        """Update header.stamp for all markers to current time"""
+        now = rospy.Time.now()
+        for marker in self.marker_array.markers:
+            marker.header.stamp = now
+
     def get_idx(self, iter: int, agent: int) -> int:
         assert iter >= 0 and iter < self.num_modules
         assert agent >= 0 and agent < self.num_modules
@@ -405,11 +411,14 @@ class Republisher:
         # print(data.saturated_idx)
         # print(data.increment)
         # self.marker_data.pretty_print(data)
-        
+
         # update marker data
         self.marker_data.update_forces(data.f_x, data.f_y, data.f_z, data.saturated_idx, data.increment)
         self.marker_data.update_wrench(data.allocated_control)
         self.marker_data.update_desired_wrench(data.control_sp)
+
+        # update timestamps before publishing
+        self.marker_data.update_timestamps()
 
         # publish marker topic
         self.marker_pub.publish(self.marker_data.marker_array)
@@ -440,6 +449,7 @@ class Republisher:
         for k in range(10):
             self.joint_msg.header.stamp = rospy.Time.now()
             self.pub.publish(self.joint_msg)
+            self.marker_data.update_timestamps()
             self.marker_pub.publish(self.marker_data.marker_array)
             r.sleep()
         
