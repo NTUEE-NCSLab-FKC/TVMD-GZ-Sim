@@ -13,6 +13,7 @@
       - bag: RosBag 檔案路徑 (必填)
       - rate: 播放速率 (預設 1.0)
       - start: 開始時間偏移 (預設 0)
+      - attitude_only: 只顯示姿態變化，位置固定在原點 (預設 false)
   -->
 
   <!-- 參數 -->
@@ -21,12 +22,15 @@
   <arg name="bag" />
   <arg name="rate" default="1.0"/>
   <arg name="start" default="0"/>
+  <arg name="attitude_only" default="false"/>
 
   <!-- 載入機器人描述 -->
   <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
 
   <!-- Joint State Republisher (將 PX4 topics 轉換為 joint states 和 markers) -->
-  <node name="joint_state_republisher" pkg="tvmd" type="republisher.py" output="screen"/>
+  <node name="joint_state_republisher" pkg="tvmd" type="republisher.py" output="screen">
+    <param name="attitude_only" value="$(arg attitude_only)"/>
+  </node>
 
   <!-- Robot State Publisher -->
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>

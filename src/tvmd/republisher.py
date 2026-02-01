@@ -475,7 +475,14 @@ class Republisher:
         rospy.Subscriber("px4/actuator_servos", ActuatorServos, self.servo_listener)
         rospy.Subscriber("px4/control_allocation_meta_data", ControlAllocationMetaData, self.meta_data_listener)
         rospy.Subscriber("px4/vehicle_attitude", VehicleAttitude, self.vehicle_attitude_listener)
-        rospy.Subscriber("px4/vehicle_local_position", VehicleLocalPosition, self.vehicle_local_position_listener)
+
+        # Only subscribe to position if attitude_only is False
+        attitude_only = rospy.get_param("~attitude_only", False)
+        if not attitude_only:
+            rospy.Subscriber("px4/vehicle_local_position", VehicleLocalPosition, self.vehicle_local_position_listener)
+        else:
+            rospy.loginfo("Attitude-only mode: position will stay at origin")
+
         rospy.spin()
         return
 
