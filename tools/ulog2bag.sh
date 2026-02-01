@@ -24,7 +24,8 @@ DEFAULT_TOPIC="control_allocation_meta_data,"\
 "vehicle_thrust_setpoint,vehicle_torque_setpoint,"\
 "vehicle_rate_setpoint,"\
 "vehicle_attitude,"\
-"vehicle_acceleration"
+"vehicle_acceleration,"\
+"vehicle_local_position"
 # "vehicle_local_position"
 # "manual_control_setpoint,"\
 # "vehicle_angular_velocity,"\

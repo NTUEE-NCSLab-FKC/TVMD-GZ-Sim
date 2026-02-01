@@ -13,6 +13,7 @@ from px4_msgs.msg import ActuatorMotors
 from px4_msgs.msg import ActuatorServos
 from px4_msgs.msg import ControlAllocationMetaData
 from px4_msgs.msg import VehicleAttitude
+from px4_msgs.msg import VehicleLocalPosition
 from sensor_msgs.msg import JointState
 
 # For meta data visualization
@@ -432,9 +433,9 @@ class Republisher:
 
     def vehicle_attitude_listener(self, data: VehicleAttitude):
         # # Quaternion rotation from the FRD body frame to the NED earth frame
-        
-        # # I don't know why, but the following line does work 
-        # # Including a right multiplication of the inverse of the delta quaternion, 
+
+        # # I don't know why, but the following line does work
+        # # Including a right multiplication of the inverse of the delta quaternion,
         # # which contains a pure yaw rotation, the inverse direction of the x-component.
 
         # transform from wxyz to xyzw
@@ -447,6 +448,15 @@ class Republisher:
         self.baselink_transform.transform.rotation.y = q[1]
         self.baselink_transform.transform.rotation.z = q[2]
         self.baselink_transform.transform.rotation.w = q[3]
+        self.broadcaster.sendTransform(self.baselink_transform)
+
+    def vehicle_local_position_listener(self, data: VehicleLocalPosition):
+        # Update position in transform (NED to ENU conversion)
+        # PX4 uses NED (North-East-Down), RViz uses ENU (East-North-Up)
+        self.baselink_transform.header.stamp = rospy.Time.now()
+        self.baselink_transform.transform.translation.x = data.y   # East
+        self.baselink_transform.transform.translation.y = data.x   # North
+        self.baselink_transform.transform.translation.z = -data.z  # Up
         self.broadcaster.sendTransform(self.baselink_transform)
 
     def run(self):
@@ -465,6 +475,7 @@ class Republisher:
         rospy.Subscriber("px4/actuator_servos", ActuatorServos, self.servo_listener)
         rospy.Subscriber("px4/control_allocation_meta_data", ControlAllocationMetaData, self.meta_data_listener)
         rospy.Subscriber("px4/vehicle_attitude", VehicleAttitude, self.vehicle_attitude_listener)
+        rospy.Subscriber("px4/vehicle_local_position", VehicleLocalPosition, self.vehicle_local_position_listener)
         rospy.spin()
         return
 

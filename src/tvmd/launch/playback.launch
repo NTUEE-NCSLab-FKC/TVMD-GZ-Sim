@@ -43,6 +43,7 @@
     <remap from="vehicle_thrust_setpoint" to="px4/vehicle_thrust_setpoint"/>
     <remap from="vehicle_torque_setpoint" to="px4/vehicle_torque_setpoint"/>
     <remap from="vehicle_attitude" to="px4/vehicle_attitude"/>
+    <remap from="vehicle_local_position" to="px4/vehicle_local_position"/>
   </node>
 
 </launch>
