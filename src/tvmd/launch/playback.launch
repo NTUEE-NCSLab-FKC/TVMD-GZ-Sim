@@ -13,7 +13,6 @@
       - bag: RosBag 檔案路徑 (必填)
       - rate: 播放速率 (預設 1.0)
       - start: 開始時間偏移 (預設 0)
-      - loop: 是否循環播放 (預設 false)
   -->
 
   <!-- 參數 -->
@@ -22,7 +21,6 @@
   <arg name="bag" />
   <arg name="rate" default="1.0"/>
   <arg name="start" default="0"/>
-  <arg name="loop" default="false"/>
 
   <!-- 載入機器人描述 -->
   <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
@@ -38,7 +36,7 @@
 
   <!-- RosBag 播放 -->
   <node name="rosbag_play" pkg="rosbag" type="play" output="screen"
-        args="$(arg bag) --rate $(arg rate) --start $(arg start) --clock $(eval '--loop' if arg('loop') else '')">
+        args="$(arg bag) --rate $(arg rate) --start $(arg start) --clock">
     <remap from="control_allocation_meta_data" to="px4/control_allocation_meta_data"/>
     <remap from="actuator_motors" to="px4/actuator_motors"/>
     <remap from="actuator_servos" to="px4/actuator_servos"/>
