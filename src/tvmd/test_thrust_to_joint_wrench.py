@@ -40,13 +40,14 @@ MOTOR_CONSTANT = 2e-05        # 推力常數 N/(rad/s)²
 MOMENT_CONSTANT = 0.06        # 扭矩常數
 MAX_ROT_VELOCITY = 1500       # 最大轉速 rad/s
 
-# 模組位置 (來自 tvmd.xacro，相對於 base_link)
-# 格式: [x, y, z] in meters
+# 模組位置 (來自 tvmd.xacro - H型機架配置)
+# Module 1: Front-Left,  Module 2: Front-Right
+# Module 3: Rear-Left,   Module 4: Rear-Right
 MODULE_POSITIONS = np.array([
-    [0.11, 0.11, 0.0],    # Module 1
-    [-0.11, 0.11, 0.0],   # Module 2
-    [-0.11, -0.11, 0.0],  # Module 3
-    [0.11, -0.11, 0.0],   # Module 4
+    [0.1675, 0.1825, -0.02],   # Module 1 (Front-Left)
+    [0.1675, -0.172, -0.02],   # Module 2 (Front-Right)
+    [-0.15, 0.1825, -0.02],    # Module 3 (Rear-Left)
+    [-0.15, -0.175, -0.02],    # Module 4 (Rear-Right)
 ])
 
 # 機體參數 (來自 Navigator-Def.xacro)
