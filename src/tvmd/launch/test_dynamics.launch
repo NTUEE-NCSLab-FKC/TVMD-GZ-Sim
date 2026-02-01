@@ -1,0 +1,39 @@
+<launch>
+  <!--
+    動力學測試 Launch 文件
+
+    模擬推力向量變化對機體位置和姿態的影響：
+    - 推力 → 加速度 → 速度 → 位置
+    - 力矩 → 角加速度 → 角速度 → 姿態
+
+    使用方式:
+      roslaunch tvmd test_dynamics.launch
+
+    RViz 設定:
+      - Fixed Frame: world
+      - 可以看到機體在空間中移動
+  -->
+
+  <!-- 參數 -->
+  <arg name="model" default="$(find tvmd)/urdf/tvmd.xacro"/>
+  <arg name="rvizconfig" default="$(find tvmd)/launch/urdf.rviz"/>
+  <arg name="rate" default="100"/>
+
+  <!-- 載入機器人描述 -->
+  <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
+
+  <!-- Joint State Republisher -->
+  <node name="joint_state_republisher" pkg="tvmd" type="republisher.py" output="screen"/>
+
+  <!-- Robot State Publisher -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+
+  <!-- RViz -->
+  <node name="rviz" pkg="rviz" args="-d $(arg rvizconfig)" type="rviz" required="true"/>
+
+  <!-- 動力學測試發布器 -->
+  <node name="test_dynamics" pkg="tvmd" type="test_dynamics.py" output="screen">
+    <param name="rate" value="$(arg rate)"/>
+  </node>
+
+</launch>
