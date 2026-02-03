@@ -198,9 +198,11 @@ class MetaDataMarker:
             for aid in range(self.num_modules):
                 if active_agent[aid]:
                     idx = self.get_idx(iter, aid)
+                    # PX4 uses FRD (Forward-Right-Down), RViz body frame uses FLU (Forward-Left-Up)
+                    # Transform: x_rviz = x_px4, y_rviz = -y_px4, z_rviz = -z_px4
                     self.marker_array.markers[aid].points[iter+1].x = f_x[idx] * self.scales
-                    self.marker_array.markers[aid].points[iter+1].y = f_y[idx] * self.scales
-                    self.marker_array.markers[aid].points[iter+1].z = f_z[idx] * self.scales
+                    self.marker_array.markers[aid].points[iter+1].y = -f_y[idx] * self.scales
+                    self.marker_array.markers[aid].points[iter+1].z = -f_z[idx] * self.scales
                 else:
                     self.marker_array.markers[aid].points[iter+1].x = self.marker_array.markers[aid].points[iter].x
                     self.marker_array.markers[aid].points[iter+1].y = self.marker_array.markers[aid].points[iter].y
@@ -218,14 +220,16 @@ class MetaDataMarker:
         self.marker_array.markers[marker_idx].points[1].z = vec[2]
 
     def update_wrench(self, sp:list) -> None:
-        torque = sp[0:3]
-        force = sp[3:6]
+        # PX4 FRD to RViz FLU: x=x, y=-y, z=-z
+        torque = [sp[0], -sp[1], -sp[2]]
+        force = [sp[3], -sp[4], -sp[5]]
         self.__update_arrow(self.wf_idx, force)
         self.__update_arrow(self.wt_idx, torque)
 
     def update_desired_wrench(self, sp:list) -> None:
-        torque = sp[0:3]
-        force = sp[3:6]
+        # PX4 FRD to RViz FLU: x=x, y=-y, z=-z
+        torque = [sp[0], -sp[1], -sp[2]]
+        force = [sp[3], -sp[4], -sp[5]]
         self.__update_arrow(self.wfd_idx, force)
         self.__update_arrow(self.wtd_idx, torque)
 
