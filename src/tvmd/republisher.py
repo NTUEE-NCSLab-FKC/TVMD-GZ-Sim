@@ -141,10 +141,11 @@ class MetaDataMarker:
         return marker
 
 
-    def __init__(self, _num_module: int) -> None:
+    def __init__(self, _num_module: int, frd_to_flu: bool = False) -> None:
         self.z_offset = 0.065
         self.scales = 0.02  # Scale factor for pseudo-force visualization (meters per Newton)
         self.num_modules = _num_module
+        self.frd_to_flu = frd_to_flu  # Enable FRD to FLU coordinate transformation
         self.marker_array = MarkerArray()
 
         # Pseudo forces
@@ -193,9 +194,15 @@ class MetaDataMarker:
             for aid in range(self.num_modules):
                 if active_agent[aid]:
                     idx = self.get_idx(iter, aid)
-                    self.marker_array.markers[aid].points[iter+1].x = f_x[idx] * self.scales
-                    self.marker_array.markers[aid].points[iter+1].y = f_y[idx] * self.scales
-                    self.marker_array.markers[aid].points[iter+1].z = f_z[idx] * self.scales
+                    if self.frd_to_flu:
+                        # PX4 FRD to RViz FLU: x=x, y=-y, z=-z
+                        self.marker_array.markers[aid].points[iter+1].x = f_x[idx] * self.scales
+                        self.marker_array.markers[aid].points[iter+1].y = -f_y[idx] * self.scales
+                        self.marker_array.markers[aid].points[iter+1].z = -f_z[idx] * self.scales
+                    else:
+                        self.marker_array.markers[aid].points[iter+1].x = f_x[idx] * self.scales
+                        self.marker_array.markers[aid].points[iter+1].y = f_y[idx] * self.scales
+                        self.marker_array.markers[aid].points[iter+1].z = f_z[idx] * self.scales
                 else:
                     self.marker_array.markers[aid].points[iter+1].x = self.marker_array.markers[aid].points[iter].x
                     self.marker_array.markers[aid].points[iter+1].y = self.marker_array.markers[aid].points[iter].y
@@ -213,14 +220,24 @@ class MetaDataMarker:
         self.marker_array.markers[marker_idx].points[1].z = vec[2]
 
     def update_wrench(self, sp:list) -> None:
-        torque = sp[0:3]
-        force = sp[3:6]
+        if self.frd_to_flu:
+            # PX4 FRD to RViz FLU: x=x, y=-y, z=-z
+            torque = [sp[0], -sp[1], -sp[2]]
+            force = [sp[3], -sp[4], -sp[5]]
+        else:
+            torque = sp[0:3]
+            force = sp[3:6]
         self.__update_arrow(self.wf_idx, force)
         self.__update_arrow(self.wt_idx, torque)
 
     def update_desired_wrench(self, sp:list) -> None:
-        torque = sp[0:3]
-        force = sp[3:6]
+        if self.frd_to_flu:
+            # PX4 FRD to RViz FLU: x=x, y=-y, z=-z
+            torque = [sp[0], -sp[1], -sp[2]]
+            force = [sp[3], -sp[4], -sp[5]]
+        else:
+            torque = sp[0:3]
+            force = sp[3:6]
         self.__update_arrow(self.wfd_idx, force)
         self.__update_arrow(self.wtd_idx, torque)
 
@@ -369,9 +386,12 @@ class Republisher:
         self.broadcaster = tf2_ros.StaticTransformBroadcaster()
         self.baselink_transform = self.__init_baselink_transform()
 
+        # FRD to FLU coordinate transformation (for PX4 data)
+        self.frd_to_flu = rospy.get_param("~frd_to_flu", False)
+
         topic = 'visualization_marker_array'
         self.marker_pub = rospy.Publisher(topic, MarkerArray, queue_size=1)
-        self.marker_data = MetaDataMarker(self.num_modules)
+        self.marker_data = MetaDataMarker(self.num_modules, self.frd_to_flu)
 
     def data_update(self, data, mode):
         if mode == "servos":
