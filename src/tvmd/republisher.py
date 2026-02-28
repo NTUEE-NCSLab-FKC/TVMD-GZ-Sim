@@ -70,7 +70,7 @@ class MetaDataMarker:
             
             self.marker_array.markers[aid].pose.position.x = 0
             self.marker_array.markers[aid].pose.position.y = 0
-            self.marker_array.markers[aid].pose.position.z = 0.065
+            self.marker_array.markers[aid].pose.position.z = 0
             self.marker_array.markers[aid].pose.orientation.x = 0.0
             self.marker_array.markers[aid].pose.orientation.y = 0.0
             self.marker_array.markers[aid].pose.orientation.z = 0.0
@@ -82,8 +82,8 @@ class MetaDataMarker:
             self.marker_array.markers[aid].scale.z = 0.01
 
             # How long the object should last before being automatically deleted.  0 means forever
-            # self.marker_array.markers[aid].lifetime = 0.0
-            
+            self.marker_array.markers[aid].lifetime = rospy.Duration(0)
+
             # If this marker should be frame-locked, i.e. retransformed into its frame every timestep
             self.marker_array.markers[aid].frame_locked = True
 
@@ -128,6 +128,7 @@ class MetaDataMarker:
         marker.color.g = 0.0
         marker.color.b = 1.0
 
+        marker.lifetime = rospy.Duration(0)
         marker.points = [Point(), Point()]
         marker.points[0].x = 0.0
         marker.points[0].y = 0.0
@@ -140,7 +141,7 @@ class MetaDataMarker:
 
     def __init__(self, _num_module: int) -> None:
         self.z_offset = 0.065
-        self.scales = 0.1
+        self.scales = 0.08  # Scale factor for pseudo-force visualization (meters per Newton)
         self.num_modules = _num_module
         self.marker_array = MarkerArray()
 
@@ -183,9 +184,13 @@ class MetaDataMarker:
         active_agent = [True for i in range(self.num_modules)]
         c = 0
         for iter in range(self.num_modules):
-            if sat_indices[iter] < 0 or sat_indices[iter] >= self.num_modules or c >= 1.0:
-                # End of allocation
-                active_agent = [False for i in range(self.num_modules)]
+            if c >= 1.0:
+                # End of allocation - copy previous points
+                for aid in range(self.num_modules):
+                    self.marker_array.markers[aid].points[iter+1].x = self.marker_array.markers[aid].points[iter].x
+                    self.marker_array.markers[aid].points[iter+1].y = self.marker_array.markers[aid].points[iter].y
+                    self.marker_array.markers[aid].points[iter+1].z = self.marker_array.markers[aid].points[iter].z
+                continue
 
             for aid in range(self.num_modules):
                 if active_agent[aid]:
@@ -199,8 +204,8 @@ class MetaDataMarker:
                     self.marker_array.markers[aid].points[iter+1].z = self.marker_array.markers[aid].points[iter].z
 
             c += d[iter]
-            
-            # Mark as saturated
+
+            # Mark as saturated (only if valid index)
             if sat_indices[iter] >= 0 and sat_indices[iter] < self.num_modules:
                 active_agent[sat_indices[iter]] = False
                 
@@ -220,6 +225,12 @@ class MetaDataMarker:
         force = sp[3:6]
         self.__update_arrow(self.wfd_idx, force)
         self.__update_arrow(self.wtd_idx, torque)
+
+    def update_timestamps(self) -> None:
+        """Update header.stamp for all markers to current time"""
+        now = rospy.Time.now()
+        for marker in self.marker_array.markers:
+            marker.header.stamp = now
 
     def get_idx(self, iter: int, agent: int) -> int:
         assert iter >= 0 and iter < self.num_modules
@@ -411,6 +422,9 @@ class Republisher:
         self.marker_data.update_wrench(data.allocated_control)
         self.marker_data.update_desired_wrench(data.control_sp)
 
+        # update timestamps before publishing
+        self.marker_data.update_timestamps()
+
         # publish marker topic
         self.marker_pub.publish(self.marker_data.marker_array)
 
@@ -452,6 +466,7 @@ class Republisher:
         for k in range(10):
             self.joint_msg.header.stamp = rospy.Time.now()
             self.pub.publish(self.joint_msg)
+            self.marker_data.update_timestamps()
             self.marker_pub.publish(self.marker_data.marker_array)
             r.sleep()
         
