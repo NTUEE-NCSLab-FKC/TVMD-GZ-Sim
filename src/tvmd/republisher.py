@@ -415,19 +415,31 @@ class Republisher:
         self.marker_pub.publish(self.marker_data.marker_array)
 
     def vehicle_attitude_listener(self, data: VehicleAttitude):
-        # # Quaternion rotation from the FRD body frame to the NED earth frame
-        
-        # # I don't know why, but the following line does work 
-        # # Including a right multiplication of the inverse of the delta quaternion, 
-        # # which contains a pure yaw rotation, the inverse direction of the x-component.
+        # PX4 uses FRD body frame and NED world frame.
+        # ROS uses FLU body frame and ENU world frame.
+        # Conversion: q_FLU_ENU = q_NED_ENU * q_FRD_NED * q_FLU_FRD
 
-        # transform from wxyz to xyzw
+        # Transform from wxyz (PX4) to xyzw (tf)
         q_reset = [data.delta_q_reset[i] for i in [1, 2, 3, 0]]
         q = [data.q[i] for i in [1, 2, 3, 0]]
 
+        # Apply reset correction (right-multiply by delta_q_reset)
         q = tf.transformations.quaternion_multiply(q, q_reset)
+
+        # q_NED_ENU: 180-deg rotation around [1/sqrt(2), 1/sqrt(2), 0]
+        #   maps NED axes to ENU axes: x_ENU=y_NED, y_ENU=x_NED, z_ENU=-z_NED
+        q_NED_ENU = [1.0 / math.sqrt(2), 1.0 / math.sqrt(2), 0.0, 0.0]
+        # q_FLU_FRD: 180-deg rotation around X
+        #   maps FLU axes to FRD axes: y_FRD=-y_FLU, z_FRD=-z_FLU
+        q_FLU_FRD = [1.0, 0.0, 0.0, 0.0]
+
+        q = tf.transformations.quaternion_multiply(
+            q_NED_ENU,
+            tf.transformations.quaternion_multiply(q, q_FLU_FRD)
+        )
+
         self.baselink_transform.header.stamp = rospy.Time.now()
-        self.baselink_transform.transform.rotation.x = -q[0]
+        self.baselink_transform.transform.rotation.x = q[0]
         self.baselink_transform.transform.rotation.y = q[1]
         self.baselink_transform.transform.rotation.z = q[2]
         self.baselink_transform.transform.rotation.w = q[3]
