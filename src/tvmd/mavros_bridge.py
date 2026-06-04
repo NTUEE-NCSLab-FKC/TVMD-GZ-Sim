@@ -41,9 +41,15 @@ from px4_msgs.msg import VehicleAttitude
 from px4_msgs.msg import ControlAllocationMetaData
 
 # ── Channel layout ────────────────────────────────────────────────────────────
-# rc/out channel indices for servos and motors.
-# Adjust if your TVMD mixer uses a different layout.
-SERVO_CHANNELS = [0, 1, 2, 3]   # -> ActuatorServos.control[0..3]
+# Map rc/out channel index -> ActuatorServos.control index.
+# republisher.py reads servos as: ctrl[2*i + j] where i=module(0-3), j=0(gimbal_actuator) or 1(body_gimbal)
+#
+# Assumed TVMD mixer layout (one tilt servo + one motor per module):
+#   ch[0..3] = tilt servos for module 1..4  -> servo ctrl[1,3,5,7] (body_gimbal_joint)
+#   ch[4..7] = motors for module 1..4       -> motor ctrl[0..3]
+#
+# SERVO_CH_MAP: list of (rc_out_channel, actuator_servos_control_index)
+SERVO_CH_MAP   = [(0, 1), (1, 3), (2, 5), (3, 7)]  # one gimbal per module
 MOTOR_CHANNELS = [4, 5, 6, 7]   # -> ActuatorMotors.control[0..3]
 
 # PWM midpoint and half-range for normalisation.
@@ -129,8 +135,8 @@ class MavrosBridge:
         servo_msg.timestamp        = ts
         servo_msg.timestamp_sample = ts
         servo_ctrl = [0.0] * 8
-        for out_idx, ch_idx in enumerate(SERVO_CHANNELS):
-            servo_ctrl[out_idx] = _pwm_to_norm(ch[ch_idx])
+        for ch_idx, ctrl_idx in SERVO_CH_MAP:
+            servo_ctrl[ctrl_idx] = _pwm_to_norm(ch[ch_idx])
         servo_msg.control = servo_ctrl
         self._pub_servos.publish(servo_msg)
 
