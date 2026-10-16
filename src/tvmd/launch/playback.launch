@@ -25,6 +25,8 @@
   <arg name="force_origin_z" default="0.017"/>
   <!-- Color of the thrust arrows: gradient (as the pseudo-forces), magnitude (blue: 0, red: full throttle) or module -->
   <arg name="thrust_color_mode" default="gradient"/>
+  <!-- Offset of the thrust arrow heads from the end of the lines [m] -->
+  <arg name="thrust_head_offset" default="0.0"/>
 
   <include file="$(find tvmd)/launch/display.launch">
     <arg name="rate" value="$(arg rate)"/>
@@ -33,6 +35,7 @@
     <arg name="servo_mapping" value="$(arg servo_mapping)"/>
     <arg name="force_origin_z" value="$(arg force_origin_z)"/>
     <arg name="thrust_color_mode" value="$(arg thrust_color_mode)"/>
+    <arg name="thrust_head_offset" value="$(arg thrust_head_offset)"/>
   </include>
 
   <node name="player" pkg="rosbag" type="play" output="screen" required="true"

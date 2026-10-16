@@ -147,6 +147,8 @@ class MetaDataMarker:
         self.origin_z = origin_z
         # Coloring of the thrust arrows: "gradient" (as the pseudo-forces), "magnitude" (thrust / thrust_max) or "module"
         self.thrust_color_mode = "gradient"
+        # Position of the arrow heads relative to the end of the thrust lines [m]
+        self.thrust_head_offset = 0.0
         self.thrust_max = 6.125     # [N]
         self.scales = 0.1
         self.num_modules = _num_module
@@ -323,8 +325,9 @@ class MetaDataMarker:
                 line.colors[k].a = 1.0
 
             head = self.marker_array.markers[self.thrust_head_idx + aid]
-            head.points[0].z = self.origin_z + max(length - head.scale.z, 0.0)
-            head.points[1].z = self.origin_z + length
+            # The head starts at the end of the line (+ thrust_head_offset), so the line keeps its full length
+            head.points[0].z = self.origin_z + length + self.thrust_head_offset
+            head.points[1].z = head.points[0].z + head.scale.z
             head.color.r, head.color.g, head.color.b = colors[-1]
 
     def __update_arrow(self, marker_idx: int, vec: list, alpha: float) -> None:
@@ -500,6 +503,13 @@ class Republisher:
         self.thrust_tf0 = float(get_param("thrust_tf0", 0.0))
         self.marker_data.thrust_max = self.thrust_cl + self.thrust_tf0     # thrust at full throttle
         self.marker_data.thrust_color_mode = str(get_param("thrust_color_mode", "gradient"))
+        self.marker_data.thrust_head_offset = float(get_param("thrust_head_offset", 0.0))
+        head_length = float(get_param("thrust_head_length", 0.03))
+        head_diameter = float(get_param("thrust_head_diameter", 0.025))
+        for aid in range(self.num_modules):
+            head = self.marker_data.marker_array.markers[self.marker_data.thrust_head_idx + aid]
+            head.scale.y = head_diameter
+            head.scale.z = head_length
 
         # Mapping from actuator_servos.control to the joint angles:
         #   "px4":  angle = control * (MAXA - MINA) / 2 / GR, the inverse of the actuator scale in

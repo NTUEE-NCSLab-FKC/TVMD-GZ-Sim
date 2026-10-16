@@ -11,6 +11,7 @@
   <arg name="servo_mapping" default="px4"/>
   <arg name="force_origin_z" default="0.017"/>
   <arg name="thrust_color_mode" default="gradient"/>
+  <arg name="thrust_head_offset" default="0.0"/>
   <node name="joint_state_republisher" pkg="tvmd" type="republisher.py" output="screen">
     <!-- Rate of republishing joint states, TF, and markers to Rviz [Hz] -->
     <param name="rate" value="$(arg rate)"/>
@@ -32,6 +33,10 @@
     <param name="thrust_tf0" value="0.0"/>
     <!-- Color of the thrust arrows: gradient (as the pseudo-forces), magnitude (blue: 0, red: full throttle) or module -->
     <param name="thrust_color_mode" value="$(arg thrust_color_mode)"/>
+    <!-- Arrow heads of the thrusts: offset from the end of the line, length and diameter [m] -->
+    <param name="thrust_head_offset" value="$(arg thrust_head_offset)"/>
+    <param name="thrust_head_length" value="0.03"/>
+    <param name="thrust_head_diameter" value="0.025"/>
   </node>
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
     <!-- Do not throttle joint_states, otherwise the module TFs may fall behind base_link -->
