@@ -145,6 +145,9 @@ class MetaDataMarker:
     def __init__(self, _num_module: int, origin_z: float = 0.017) -> None:
         # Height of the propeller center above the gimbal pivot, in the propeller (actuator) frame [m]
         self.origin_z = origin_z
+        # Coloring of the thrust arrows: "magnitude" (thrust / thrust_max) or "module"
+        self.thrust_color_mode = "magnitude"
+        self.thrust_max = 6.125     # [N]
         self.scales = 0.1
         self.num_modules = _num_module
         self.marker_array = MarkerArray()
@@ -258,11 +261,34 @@ class MetaDataMarker:
             position.y = -self.origin_z * math.sin(a)
             position.z = self.origin_z * math.cos(a) * math.cos(b)
 
+    # Distinct colors of the modules, for thrust_color_mode = "module"
+    MODULE_COLORS = [(1.0, 0.3, 0.3), (0.3, 1.0, 0.3), (0.3, 0.5, 1.0), (1.0, 0.9, 0.2)]
+
+    @staticmethod
+    def __colormap(ratio: float) -> tuple:
+        # blue (0) -> cyan -> green (0.5) -> yellow -> red (1)
+        r = min(max(ratio, 0.0), 1.0) * 4.0
+        if r < 1.0:
+            return (0.0, r, 1.0)
+        if r < 2.0:
+            return (0.0, 1.0, 2.0 - r)
+        if r < 3.0:
+            return (r - 2.0, 1.0, 0.0)
+        return (1.0, 4.0 - r, 0.0)
+
     def update_thrusts(self, thrusts: list, alpha: float = 1.0) -> None:
         for aid in range(self.num_modules):
-            point = self.marker_array.markers[self.thrust_idx + aid].points[1]
+            marker = self.marker_array.markers[self.thrust_idx + aid]
+            point = marker.points[1]
             target = self.origin_z + thrusts[aid] * self.scales
             point.z += alpha * (target - point.z)
+
+            # Arrow length is the thrust [N] * scales [m/N], and the color shows the thrust level
+            if self.thrust_color_mode == "module":
+                color = MetaDataMarker.MODULE_COLORS[aid % len(MetaDataMarker.MODULE_COLORS)]
+            else:
+                color = MetaDataMarker.__colormap((point.z - self.origin_z) / self.scales / self.thrust_max)
+            marker.color.r, marker.color.g, marker.color.b = color
 
     def __update_arrow(self, marker_idx: int, vec: list, alpha: float) -> None:
         MetaDataMarker.__filter_point(self.marker_array.markers[marker_idx].points[1], vec, alpha)
@@ -435,6 +461,8 @@ class Republisher:
         # Motor model: thrust = c_l * u + Tf0 (ActuatorEffectivenessVTOL_TVMD.hpp)
         self.thrust_cl = float(get_param("thrust_cl", 6.125))
         self.thrust_tf0 = float(get_param("thrust_tf0", 0.0))
+        self.marker_data.thrust_max = self.thrust_cl + self.thrust_tf0     # thrust at full throttle
+        self.marker_data.thrust_color_mode = str(get_param("thrust_color_mode", "magnitude"))
 
         # Mapping from actuator_servos.control to the joint angles:
         #   "px4":  angle = control * (MAXA - MINA) / 2 / GR, the inverse of the actuator scale in

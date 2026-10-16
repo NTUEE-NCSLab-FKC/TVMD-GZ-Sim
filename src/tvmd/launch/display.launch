@@ -10,6 +10,7 @@
   <arg name="servo_filter_tau" default="0.03"/>
   <arg name="servo_mapping" default="px4"/>
   <arg name="force_origin_z" default="0.017"/>
+  <arg name="thrust_color_mode" default="magnitude"/>
   <node name="joint_state_republisher" pkg="tvmd" type="republisher.py" output="screen">
     <!-- Rate of republishing joint states, TF, and markers to Rviz [Hz] -->
     <param name="rate" value="$(arg rate)"/>
@@ -29,6 +30,8 @@
     <!-- Motor model for the thrust arrows: thrust = c_l * u + Tf0 (ActuatorEffectivenessVTOL_TVMD.hpp) -->
     <param name="thrust_cl" value="6.125"/>
     <param name="thrust_tf0" value="0.0"/>
+    <!-- Color of the thrust arrows: magnitude (blue: 0, red: full throttle) or module -->
+    <param name="thrust_color_mode" value="$(arg thrust_color_mode)"/>
   </node>
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
     <!-- Do not throttle joint_states, otherwise the module TFs may fall behind base_link -->
