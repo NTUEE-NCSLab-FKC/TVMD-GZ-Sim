@@ -405,6 +405,10 @@ class Republisher:
         self.path_max_length = int(get_param("path_max_length", 5000))
         self.path_min_dist = float(get_param("path_min_distance", 0.01))   # [m]
         self.last_position_timestamp = 0
+        # For reporting the actual playback speed (PX4 time / wall time)
+        self.speed_ref = None
+        self.time_jumps = 0
+        self.report_wall = None
 
     @staticmethod
     def filter_gain(tau: float, timestamp: int, last_timestamp: int) -> float:
@@ -490,7 +494,10 @@ class Republisher:
             # Replay restarted (e.g., looping in PlotJuggler): clear the trajectory
             if data.timestamp < self.last_position_timestamp:
                 self.path_msg.poses = []
+                self.time_jumps += 1
+                self.speed_ref = None
             self.last_position_timestamp = data.timestamp
+            self.__report_speed(data.timestamp)
 
             # NED -> NWU
             translation = self.baselink_transform.transform.translation
@@ -499,6 +506,26 @@ class Republisher:
                 translation.y = -data.y
             if data.z_valid:
                 translation.z = -data.z
+
+    def __report_speed(self, timestamp: int) -> None:
+        wall = rospy.get_time()
+        if self.speed_ref is None:
+            self.speed_ref = (wall, timestamp)
+        if self.report_wall is None:
+            self.report_wall = wall
+        if wall - self.report_wall < 5.0:
+            return
+
+        if self.time_jumps > 1:
+            # Typically caused by two players (e.g., PlotJuggler and rosbag play) at the same time
+            rospy.logwarn("Playback: PX4 time jumped backward {} times in {:.0f} s, "
+                "more than one publisher of px4 topics?".format(self.time_jumps, wall - self.report_wall))
+        elif wall > self.speed_ref[0]:
+            speed = (timestamp - self.speed_ref[1]) * 1e-6 / (wall - self.speed_ref[0])
+            rospy.loginfo("Playback: PX4 time {:.1f} s, speed x{:.2f}".format(timestamp * 1e-6, speed))
+        self.speed_ref = (wall, timestamp)
+        self.report_wall = wall
+        self.time_jumps = 0
 
     def __append_path(self, stamp):
         translation = self.baselink_transform.transform.translation
