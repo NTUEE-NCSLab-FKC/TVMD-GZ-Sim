@@ -8,6 +8,7 @@
   <arg name="rate" default="50"/>
   <arg name="force_filter_tau" default="0.05"/>
   <arg name="servo_filter_tau" default="0.03"/>
+  <arg name="servo_mapping" default="px4"/>
   <node name="joint_state_republisher" pkg="tvmd" type="republisher.py" output="screen">
     <!-- Rate of republishing joint states, TF, and markers to Rviz [Hz] -->
     <param name="rate" value="$(arg rate)"/>
@@ -17,8 +18,11 @@
     <!-- Low-pass filter time constants for smoother visualization [s], 0 to disable -->
     <param name="force_filter_tau" value="$(arg force_filter_tau)"/>
     <param name="servo_filter_tau" value="$(arg servo_filter_tau)"/>
-    <!-- actuator_servos.control is the servo angle in rad (true), or normalized to the URDF joint limits (false) -->
-    <param name="servo_control_in_rad" value="true"/>
+    <!-- actuator_servos.control -> joint angle: px4 (CA_SV_TLx_MINA/MAXA, gear ratio), rad (as GZ-Sim), urdf (legacy) -->
+    <param name="servo_mapping" value="$(arg servo_mapping)"/>
+    <param name="servo_min_deg" value="-30"/>
+    <param name="servo_max_deg" value="30"/>
+    <param name="servo_gear_ratio" value="1.0"/>
   </node>
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
     <!-- Do not throttle joint_states, otherwise the module TFs may fall behind base_link -->

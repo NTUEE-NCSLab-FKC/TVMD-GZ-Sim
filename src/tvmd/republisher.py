@@ -395,8 +395,16 @@ class Republisher:
         self.last_meta_timestamp = 0
         self.last_servo_timestamp = 0
 
-        # actuator_servos.control is the servo angle in rad (true), or normalized to the joint limits (false)
-        self.servo_control_in_rad = bool(get_param("servo_control_in_rad", True))
+        # Mapping from actuator_servos.control to the joint angles:
+        #   "px4":  angle = control * (MAXA - MINA) / 2 / GR, the inverse of the actuator scale in
+        #           ActuatorEffectivenessVTOL_TVMD (CA_SV_TLx_MINA/MAXA [deg], CA_MDx_X_GR/Y_GR)
+        #   "rad":  angle = control [rad], what the GZ-Sim model does (JointPositionController)
+        #   "urdf": control normalized to the URDF joint limits (legacy)
+        self.servo_mapping = str(get_param("servo_mapping", "px4"))
+        servo_min = math.radians(float(get_param("servo_min_deg", -30.0)))
+        servo_max = math.radians(float(get_param("servo_max_deg", 30.0)))
+        gear_ratio = float(get_param("servo_gear_ratio", 1.0))
+        self.servo_angle_scale = (servo_max - servo_min) / 2.0 / gear_ratio
 
         # Trajectory of base_link in world_frame
         self.path_pub = rospy.Publisher("trajectory", Path, queue_size=1)
@@ -432,9 +440,9 @@ class Republisher:
                     joint_name = self.joint_list[joint_idx]
                     joint = self.free_joints[joint_name]
 
-                    if self.servo_control_in_rad:
-                        # PX4 (ControlAllocationModularBundled) outputs the servo angles in rad,
-                        # which are used as the joint angles directly in GZ-Sim as well.
+                    if self.servo_mapping == "px4":
+                        target = data.control[ctrl_idx] * self.servo_angle_scale
+                    elif self.servo_mapping == "rad":
                         target = data.control[ctrl_idx]
                     else:
                         # Normalized [-1, 1] to the joint limits
