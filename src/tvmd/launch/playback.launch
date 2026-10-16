@@ -1,0 +1,25 @@
+<launch>
+  <!--
+    Replay a rosbag in Rviz, e.g.,
+      roslaunch tvmd playback.launch bag:=/path/to/flight.bag start:=30 duration:=20 speed:=0.5
+  -->
+  <arg name="bag"/>
+  <!-- Start playback at this offset from the beginning of the bag [s] -->
+  <arg name="start" default="0"/>
+  <!-- Play only this long [s], 0 for the whole bag -->
+  <arg name="duration" default="0"/>
+  <!-- Playback speed factor -->
+  <arg name="speed" default="1.0"/>
+  <!-- Wait for Rviz to initialize before playback [s] -->
+  <arg name="delay" default="3"/>
+  <arg name="loop" default="false"/>
+  <!-- Rate of republishing joint states, TF, and markers to Rviz [Hz] -->
+  <arg name="rate" default="50"/>
+
+  <include file="$(find tvmd)/launch/display.launch">
+    <arg name="rate" value="$(arg rate)"/>
+  </include>
+
+  <node name="player" pkg="rosbag" type="play" output="screen" required="true"
+        args="$(eval '-d {} -s {} -r {}'.format(arg('delay'), arg('start'), arg('speed')) + (' -u {}'.format(arg('duration')) if float(arg('duration')) > 0 else '') + (' -l' if str(arg('loop')).lower() in ['true', '1'] else '') + ' ' + str(arg('bag')))"/>
+</launch>

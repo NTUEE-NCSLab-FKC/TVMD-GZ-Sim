@@ -45,6 +45,12 @@ This feature works for SITL and real flight logs.
     - All incoming topics are buffered (only the latest message is kept) and republished at a fixed rate with a common timestamp (`roslaunch tvmd display.launch rate:=50`), so that the modules stay attached to the body while the vehicle moves.
 
 
+Alternatively, replay the rosbag directly with `rosbag play` and select the time range from the command line:
+```bash
+roslaunch tvmd playback.launch bag:=/path/to/flight.bag start:=30 duration:=20 speed:=0.5
+```
+Args: `start` (offset from the beginning of the bag [s]), `duration` (0 for the whole bag), `speed` (playback speed factor), `loop`, `delay` (wait for Rviz [s]). Pause/resume with `rosservice call /player/pause_playback true` (`false` to resume).
+
 If the firmware is compiled in control allocation debug mode, the `ControlAllocationMetaData` topic will be available in the rosbag file. This topic contains the control allocation pseudo-forces and the calculation intermediate variables, which are helpful in debugging. The `republisher` node will publish this topic and convert them to [/visualization_msgs](https://wiki.ros.org/visualization_msgs), such that this data can be displayed in Rviz.
 
 ## Additional Tools
