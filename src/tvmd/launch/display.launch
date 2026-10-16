@@ -6,12 +6,17 @@
   <param name="use_gui" value="$(arg gui)"/>
   <!-- <node name="joint_state_publisher_gui" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui"/> -->
   <arg name="rate" default="50"/>
+  <arg name="force_filter_tau" default="0.05"/>
+  <arg name="servo_filter_tau" default="0.03"/>
   <node name="joint_state_republisher" pkg="tvmd" type="republisher.py" output="screen">
     <!-- Rate of republishing joint states, TF, and markers to Rviz [Hz] -->
     <param name="rate" value="$(arg rate)"/>
     <!-- Rate of publishing the trajectory (nav_msgs/Path) [Hz] -->
     <param name="path_rate" value="10"/>
     <param name="path_max_length" value="5000"/>
+    <!-- Low-pass filter time constants for smoother visualization [s], 0 to disable -->
+    <param name="force_filter_tau" value="$(arg force_filter_tau)"/>
+    <param name="servo_filter_tau" value="$(arg servo_filter_tau)"/>
   </node>
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
     <!-- Do not throttle joint_states, otherwise the module TFs may fall behind base_link -->

@@ -16,8 +16,14 @@
   <!-- Rate of republishing joint states, TF, and markers to Rviz [Hz] -->
   <arg name="rate" default="50"/>
 
+  <!-- Low-pass filter time constants for smoother visualization [s], 0 to disable -->
+  <arg name="force_filter_tau" default="0.05"/>
+  <arg name="servo_filter_tau" default="0.03"/>
+
   <include file="$(find tvmd)/launch/display.launch">
     <arg name="rate" value="$(arg rate)"/>
+    <arg name="force_filter_tau" value="$(arg force_filter_tau)"/>
+    <arg name="servo_filter_tau" value="$(arg servo_filter_tau)"/>
   </include>
 
   <node name="player" pkg="rosbag" type="play" output="screen" required="true"

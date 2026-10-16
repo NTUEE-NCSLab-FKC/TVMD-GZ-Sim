@@ -183,47 +183,65 @@ class MetaDataMarker:
     """
     Update the positions of the pseudo-forces
     """
-    def update_forces(self, f_x: list, f_y: list, f_z: list, sat_indices: list, d:list) -> None:
+    @staticmethod
+    def __num_valid_iterations(d: list) -> int:
+        # The meta data is not cleared between control cycles, so the slots after the last
+        # iteration hold stale values of previous cycles. The end is marked by increment = -1.
+        # The slot 0 is always valid (initial guess, written before the first iteration).
+        for iter in range(len(d)):
+            if d[iter] < 0:
+                return max(1, iter)
+        return len(d)
+
+    @staticmethod
+    def __filter_point(point: Point, target: list, alpha: float) -> None:
+        point.x += alpha * (target[0] - point.x)
+        point.y += alpha * (target[1] - point.y)
+        point.z += alpha * (target[2] - point.z)
+
+    def update_forces(self, f_x: list, f_y: list, f_z: list, sat_indices: list, d:list, alpha: float = 1.0) -> None:
+        n_iter = MetaDataMarker.__num_valid_iterations(d)
+
+        # Target points of the pseudo-forces: points[k+1] = force after the k-th iteration
+        targets = [[[0.0, 0.0, 0.0] for k in range(self.num_modules+1)] for aid in range(self.num_modules)]
         active_agent = [True for i in range(self.num_modules)]
         c = 0
         for iter in range(self.num_modules):
-            if sat_indices[iter] < 0 or sat_indices[iter] >= self.num_modules or c >= 1.0:
+            if iter >= n_iter or c >= 1.0:
                 # End of allocation
                 active_agent = [False for i in range(self.num_modules)]
 
             for aid in range(self.num_modules):
                 if active_agent[aid]:
                     idx = self.get_idx(iter, aid)
-                    self.marker_array.markers[aid].points[iter+1].x = f_x[idx] * self.scales
-                    self.marker_array.markers[aid].points[iter+1].y = f_y[idx] * self.scales
-                    self.marker_array.markers[aid].points[iter+1].z = f_z[idx] * self.scales
+                    targets[aid][iter+1] = [f_x[idx] * self.scales, f_y[idx] * self.scales, f_z[idx] * self.scales]
                 else:
-                    self.marker_array.markers[aid].points[iter+1].x = self.marker_array.markers[aid].points[iter].x
-                    self.marker_array.markers[aid].points[iter+1].y = self.marker_array.markers[aid].points[iter].y
-                    self.marker_array.markers[aid].points[iter+1].z = self.marker_array.markers[aid].points[iter].z
+                    targets[aid][iter+1] = targets[aid][iter]
 
-            c += d[iter]
-            
-            # Mark as saturated
-            if sat_indices[iter] >= 0 and sat_indices[iter] < self.num_modules:
-                active_agent[sat_indices[iter]] = False
+            if iter < n_iter:
+                c += d[iter]
+                # Mark as saturated
+                if sat_indices[iter] >= 0 and sat_indices[iter] < self.num_modules:
+                    active_agent[sat_indices[iter]] = False
+
+        for aid in range(self.num_modules):
+            for k in range(1, self.num_modules+1):
+                MetaDataMarker.__filter_point(self.marker_array.markers[aid].points[k], targets[aid][k], alpha)
                 
-    def __update_arrow(self, marker_idx: int, vec: list) -> None:
-        self.marker_array.markers[marker_idx].points[1].x = vec[0]
-        self.marker_array.markers[marker_idx].points[1].y = vec[1]
-        self.marker_array.markers[marker_idx].points[1].z = vec[2]
+    def __update_arrow(self, marker_idx: int, vec: list, alpha: float) -> None:
+        MetaDataMarker.__filter_point(self.marker_array.markers[marker_idx].points[1], vec, alpha)
 
-    def update_wrench(self, sp:list) -> None:
+    def update_wrench(self, sp:list, alpha: float = 1.0) -> None:
         torque = sp[0:3]
         force = sp[3:6]
-        self.__update_arrow(self.wf_idx, force)
-        self.__update_arrow(self.wt_idx, torque)
+        self.__update_arrow(self.wf_idx, force, alpha)
+        self.__update_arrow(self.wt_idx, torque, alpha)
 
-    def update_desired_wrench(self, sp:list) -> None:
+    def update_desired_wrench(self, sp:list, alpha: float = 1.0) -> None:
         torque = sp[0:3]
         force = sp[3:6]
-        self.__update_arrow(self.wfd_idx, force)
-        self.__update_arrow(self.wtd_idx, torque)
+        self.__update_arrow(self.wfd_idx, force, alpha)
+        self.__update_arrow(self.wtd_idx, torque, alpha)
 
     def get_idx(self, iter: int, agent: int) -> int:
         assert iter >= 0 and iter < self.num_modules
@@ -370,6 +388,13 @@ class Republisher:
         self.marker_data = MetaDataMarker(self.num_modules)
         self.marker_updated = False
 
+        # First-order low-pass filters for smoother visualization, time constants [s] (0: disabled).
+        # They run on every incoming message (before the down-sampling to `rate`), using the PX4 timestamps.
+        self.force_tau = float(get_param("force_filter_tau", 0.05))    # pseudo-forces and wrenches
+        self.servo_tau = float(get_param("servo_filter_tau", 0.03))    # gimbal joint angles
+        self.last_meta_timestamp = 0
+        self.last_servo_timestamp = 0
+
         # Trajectory of base_link in world_frame
         self.path_pub = rospy.Publisher("trajectory", Path, queue_size=1)
         self.path_msg = Path()
@@ -378,8 +403,18 @@ class Republisher:
         self.path_min_dist = float(get_param("path_min_distance", 0.01))   # [m]
         self.last_position_timestamp = 0
 
+    @staticmethod
+    def filter_gain(tau: float, timestamp: int, last_timestamp: int) -> float:
+        dt = (timestamp - last_timestamp) * 1e-6
+        # No filter, first sample, or a jump in time (e.g., seeking in the replay)
+        if tau <= 0.0 or last_timestamp == 0 or dt <= 0.0 or dt > 0.5:
+            return 1.0
+        return 1.0 - math.exp(-dt / tau)
+
     def data_update(self, data, mode):
         if mode == "servos":
+            alpha = Republisher.filter_gain(self.servo_tau, data.timestamp, self.last_servo_timestamp)
+            self.last_servo_timestamp = data.timestamp
             # Handle servos: gimbal (idx 0) and actuator (idx 1) for each module
             for i in range(4):
                 for j in range(2):
@@ -392,7 +427,8 @@ class Republisher:
 
                     factor = (joint['max'] - joint['min']) / 2
                     offset = (joint['max'] + joint['min']) / 2
-                    self.joint_msg.position[joint_idx] = data.control[ctrl_idx] * factor + offset
+                    target = data.control[ctrl_idx] * factor + offset
+                    self.joint_msg.position[joint_idx] += alpha * (target - self.joint_msg.position[joint_idx])
         else:
             # Handle motors: only prop1 (idx 2) for each module
             for i in range(4):
@@ -416,9 +452,11 @@ class Republisher:
         
         # update marker data, published by publish_callback()
         with self.lock:
-            self.marker_data.update_forces(data.f_x, data.f_y, data.f_z, data.saturated_idx, data.increment)
-            self.marker_data.update_wrench(data.allocated_control)
-            self.marker_data.update_desired_wrench(data.control_sp)
+            alpha = Republisher.filter_gain(self.force_tau, data.timestamp, self.last_meta_timestamp)
+            self.last_meta_timestamp = data.timestamp
+            self.marker_data.update_forces(data.f_x, data.f_y, data.f_z, data.saturated_idx, data.increment, alpha)
+            self.marker_data.update_wrench(data.allocated_control, alpha)
+            self.marker_data.update_desired_wrench(data.control_sp, alpha)
             self.marker_updated = True
 
     def vehicle_attitude_listener(self, data: VehicleAttitude):
