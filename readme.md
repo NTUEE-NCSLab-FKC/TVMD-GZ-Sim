@@ -40,6 +40,9 @@ This feature works for SITL and real flight logs.
     - Note: launch `display.launch` first to start a ROS master for PlotJuggler.
 3. Open `PlorJuggler`, go to the `Publisher` tab, click the `ROS Topic Re-Publisher` button, and select the topics to republish. 
     - The two topics are republished to `/joint_states`, which is the control input of the model in Rviz.
+    - `px4/vehicle_attitude` and `px4/vehicle_local_position` are republished as the TF `world_frame` -> `base_link` (`world_frame` is North-West-Up, `base_link` is Forward-Left-Up), and the trajectory is published to `/trajectory` (`nav_msgs/Path`).
+    - The fixed frame in Rviz is `world_frame`, and the camera follows `base_link`. Set `Views > Target Frame` to `<Fixed Frame>` to keep the camera still.
+    - All incoming topics are buffered (only the latest message is kept) and republished at a fixed rate with a common timestamp (`roslaunch tvmd display.launch rate:=50`), so that the modules stay attached to the body while the vehicle moves.
 
 
 If the firmware is compiled in control allocation debug mode, the `ControlAllocationMetaData` topic will be available in the rosbag file. This topic contains the control allocation pseudo-forces and the calculation intermediate variables, which are helpful in debugging. The `republisher` node will publish this topic and convert them to [/visualization_msgs](https://wiki.ros.org/visualization_msgs), such that this data can be displayed in Rviz.
@@ -59,7 +62,7 @@ A script is provided to facilitate the conversion:
 ```
 Args: 
 + `-f`: specify the ulog file to convert
-+ `-a`: specify the topic to convert (default: `control_allocation_meta_data,actuator_motors,actuator_servos`, etc.)
++ `-a`: specify the topic to convert (default: `control_allocation_meta_data,actuator_motors,actuator_servos,vehicle_attitude,vehicle_local_position`, etc.)
 
 Note that this feature requires a ROS environment with `px4_msgs` built and sourced. And the `px4_msgs` package should have `ControlAllocationMetaData.msg` in `px4_msgs/msg`, which can be obtained in [TVMD-UAV/TVMD-PX4](https://github.com/TVMD-UAV/TVMD-PX4). 
 

@@ -2,6 +2,7 @@
 
 import math
 import sys
+import threading
 import xml.dom.minidom
 
 
@@ -13,7 +14,10 @@ from px4_msgs.msg import ActuatorMotors
 from px4_msgs.msg import ActuatorServos
 from px4_msgs.msg import ControlAllocationMetaData
 from px4_msgs.msg import VehicleAttitude
+from px4_msgs.msg import VehicleLocalPosition
 from sensor_msgs.msg import JointState
+from nav_msgs.msg import Path
+from geometry_msgs.msg import PoseStamped
 
 # For meta data visualization
 from visualization_msgs.msg import Marker
@@ -308,9 +312,9 @@ class Republisher:
     def __init_baselink_transform(self):
         transform = TransformStamped()
         transform.header.stamp = rospy.Time.now()
-        # Quaternion rotation from the FRD body frame to the NED earth frame
-        transform.header.frame_id = "base_link"
-        transform.child_frame_id = "world_frame"
+        # Pose of base_link (FLU) in world_frame (NWU: x-North, y-West, z-Up)
+        transform.header.frame_id = "world_frame"
+        transform.child_frame_id = "base_link"
         transform.transform.translation.x = 0.0
         transform.transform.translation.y = 0.0
         transform.transform.translation.z = 0.0
@@ -324,8 +328,9 @@ class Republisher:
 
     def __init__(self) -> None:
         rospy.init_node('tvmd_republisher')
-        self.last_timestamp = 0
         self.num_modules = 4
+        # Callbacks run in separate threads, and the publishing timer in another one
+        self.lock = threading.Lock()
 
         self.free_joints = {}
         self.joint_list = [] # for maintaining the original order of the joints
@@ -349,20 +354,29 @@ class Republisher:
         # joint_names = ["_body_gimbal_joint", "_gimbal_actuator_joint", "_actuator_prop1_joint", "_actuator_prop2_joint"]
         # self.joint_msg.name = ["module{}{}".format(i+1, n) for i in range(self.num_modules) for n in joint_names]
         self.joint_msg.name = [str(name) for name in self.joint_list]
-        self.msg_updating = False
 
         # joint state publisher
         self.pub = rospy.Publisher("joint_states", JointState, queue_size=1)
 
         # TODO: Load parameters from urdf file, and calculate the scales for joints
 
-        # baselink attitude transformation broadcaster
-        self.broadcaster = tf2_ros.StaticTransformBroadcaster()
+        # baselink pose (attitude + position) transformation broadcaster.
+        # The pose changes over time, so a (non-static) TransformBroadcaster is required.
+        self.broadcaster = tf2_ros.TransformBroadcaster()
         self.baselink_transform = self.__init_baselink_transform()
 
         topic = 'visualization_marker_array'
         self.marker_pub = rospy.Publisher(topic, MarkerArray, queue_size=1)
         self.marker_data = MetaDataMarker(self.num_modules)
+        self.marker_updated = False
+
+        # Trajectory of base_link in world_frame
+        self.path_pub = rospy.Publisher("trajectory", Path, queue_size=1)
+        self.path_msg = Path()
+        self.path_msg.header.frame_id = "world_frame"
+        self.path_max_length = int(get_param("path_max_length", 5000))
+        self.path_min_dist = float(get_param("path_min_distance", 0.01))   # [m]
+        self.last_position_timestamp = 0
 
     def data_update(self, data, mode):
         if mode == "servos":
@@ -385,34 +399,27 @@ class Republisher:
                 joint_idx = 3*i + 2  # prop1 is at index 2 within each module
                 ctrl_idx = i  # Only 4 motors now (one per module)
                 self.joint_msg.position[joint_idx] += data.control[ctrl_idx]
-        
-        upcoming_timestamp = data.timestamp
-
-        # the packet is completed
-        if upcoming_timestamp == self.last_timestamp:
-            self.joint_msg.header.stamp = rospy.Time.now()
-            self.pub.publish(self.joint_msg)
-
-        self.last_timestamp = data.timestamp
+        # Published by publish_callback() at a fixed rate
     
     def motor_listener(self, data: ActuatorMotors):        
-        self.data_update(data, "motors")
+        with self.lock:
+            self.data_update(data, "motors")
     
     def servo_listener(self, data: ActuatorServos):
-        self.data_update(data, "servos")
+        with self.lock:
+            self.data_update(data, "servos")
     
     def meta_data_listener(self, data: ControlAllocationMetaData):
         # print(data.saturated_idx)
         # print(data.increment)
         # self.marker_data.pretty_print(data)
         
-        # update marker data
-        self.marker_data.update_forces(data.f_x, data.f_y, data.f_z, data.saturated_idx, data.increment)
-        self.marker_data.update_wrench(data.allocated_control)
-        self.marker_data.update_desired_wrench(data.control_sp)
-
-        # publish marker topic
-        self.marker_pub.publish(self.marker_data.marker_array)
+        # update marker data, published by publish_callback()
+        with self.lock:
+            self.marker_data.update_forces(data.f_x, data.f_y, data.f_z, data.saturated_idx, data.increment)
+            self.marker_data.update_wrench(data.allocated_control)
+            self.marker_data.update_desired_wrench(data.control_sp)
+            self.marker_updated = True
 
     def vehicle_attitude_listener(self, data: VehicleAttitude):
         # # Quaternion rotation from the FRD body frame to the NED earth frame
@@ -426,28 +433,102 @@ class Republisher:
         q = [data.q[i] for i in [1, 2, 3, 0]]
 
         q = tf.transformations.quaternion_multiply(q, q_reset)
-        self.baselink_transform.header.stamp = rospy.Time.now()
-        self.baselink_transform.transform.rotation.x = -q[0]
-        self.baselink_transform.transform.rotation.y = q[1]
-        self.baselink_transform.transform.rotation.z = q[2]
-        self.baselink_transform.transform.rotation.w = q[3]
-        self.broadcaster.sendTransform(self.baselink_transform)
+
+        # FRD->NED attitude expressed as FLU->NWU, i.e., conjugated by a 180 deg rotation about x.
+        # (Equivalent to the inverse of the former base_link->world_frame transform.)
+        with self.lock:
+            self.baselink_transform.transform.rotation.x = q[0]
+            self.baselink_transform.transform.rotation.y = -q[1]
+            self.baselink_transform.transform.rotation.z = -q[2]
+            self.baselink_transform.transform.rotation.w = q[3]
+
+    def vehicle_local_position_listener(self, data: VehicleLocalPosition):
+        with self.lock:
+            # Replay restarted (e.g., looping in PlotJuggler): clear the trajectory
+            if data.timestamp < self.last_position_timestamp:
+                self.path_msg.poses = []
+            self.last_position_timestamp = data.timestamp
+
+            # NED -> NWU
+            translation = self.baselink_transform.transform.translation
+            if data.xy_valid:
+                translation.x = data.x
+                translation.y = -data.y
+            if data.z_valid:
+                translation.z = -data.z
+
+    def __append_path(self, stamp):
+        translation = self.baselink_transform.transform.translation
+        if len(self.path_msg.poses) > 0:
+            last = self.path_msg.poses[-1].pose.position
+            dist = math.sqrt((translation.x - last.x)**2 + (translation.y - last.y)**2 + (translation.z - last.z)**2)
+            if dist < self.path_min_dist:
+                return
+
+        pose = PoseStamped()
+        pose.header.frame_id = "world_frame"
+        pose.header.stamp = stamp
+        pose.pose.position.x = translation.x
+        pose.pose.position.y = translation.y
+        pose.pose.position.z = translation.z
+        rotation = self.baselink_transform.transform.rotation
+        pose.pose.orientation.x = rotation.x
+        pose.pose.orientation.y = rotation.y
+        pose.pose.orientation.z = rotation.z
+        pose.pose.orientation.w = rotation.w
+        self.path_msg.poses.append(pose)
+        if len(self.path_msg.poses) > self.path_max_length:
+            del self.path_msg.poses[:len(self.path_msg.poses) - self.path_max_length]
+
+    def publish_callback(self, event=None):
+        # Publish the joint states, the base_link pose, and the markers with the SAME stamp,
+        # such that Rviz renders the base_link and the modules (agents) at a consistent time.
+        stamp = rospy.Time.now()
+        with self.lock:
+            self.joint_msg.header.stamp = stamp
+            self.pub.publish(self.joint_msg)
+
+            self.baselink_transform.header.stamp = stamp
+            self.broadcaster.sendTransform(self.baselink_transform)
+
+            self.__append_path(stamp)
+            self.path_msg.header.stamp = stamp
+            self.path_tick += 1
+            if self.path_tick >= self.path_decimation:
+                self.path_tick = 0
+                self.path_pub.publish(self.path_msg)
+
+            if self.marker_updated or event is None:
+                for marker in self.marker_data.marker_array.markers:
+                    marker.header.stamp = stamp
+                self.marker_pub.publish(self.marker_data.marker_array)
+                self.marker_updated = False
 
     def run(self):
+        # Rate of publishing joint states, TF and markers to Rviz.
+        # Incoming data is buffered (latest only) and republished at this rate,
+        # independent of the (possibly much higher) rates of the PX4 topics.
+        hz = float(get_param("rate", 50))
+        path_hz = float(get_param("path_rate", 10))
+        self.path_decimation = max(1, int(round(hz / path_hz)))
+        self.path_tick = 0
+
         # Allow Rviz to initialize robot model
-        hz = get_param("rate", 10)  # 10hz
-        r = rospy.Rate(hz)
+        r = rospy.Rate(10)
         for k in range(10):
-            self.joint_msg.header.stamp = rospy.Time.now()
-            self.pub.publish(self.joint_msg)
-            self.marker_pub.publish(self.marker_data.marker_array)
+            self.publish_callback()
             r.sleep()
         
         print("Start republishing")
-        rospy.Subscriber("px4/actuator_motors", ActuatorMotors, self.motor_listener)
-        rospy.Subscriber("px4/actuator_servos", ActuatorServos, self.servo_listener)
-        rospy.Subscriber("px4/control_allocation_meta_data", ControlAllocationMetaData, self.meta_data_listener)
-        rospy.Subscriber("px4/vehicle_attitude", VehicleAttitude, self.vehicle_attitude_listener)
+        # queue_size=1: always process the latest message only, otherwise the unbounded rospy
+        # queues pile up (e.g., control_allocation_meta_data is logged at full rate),
+        # and the visualization lags behind more and more.
+        rospy.Subscriber("px4/actuator_motors", ActuatorMotors, self.motor_listener, queue_size=1)
+        rospy.Subscriber("px4/actuator_servos", ActuatorServos, self.servo_listener, queue_size=1)
+        rospy.Subscriber("px4/control_allocation_meta_data", ControlAllocationMetaData, self.meta_data_listener, queue_size=1)
+        rospy.Subscriber("px4/vehicle_attitude", VehicleAttitude, self.vehicle_attitude_listener, queue_size=1)
+        rospy.Subscriber("px4/vehicle_local_position", VehicleLocalPosition, self.vehicle_local_position_listener, queue_size=1)
+        rospy.Timer(rospy.Duration(1.0 / hz), self.publish_callback)
         rospy.spin()
         return
 

@@ -52,6 +52,8 @@
   <build_depend>rospy</build_depend>
   <build_depend>px4_msgs</build_depend>
   <build_depend>visualization_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
   <build_export_depend>rospy</build_export_depend>
   <exec_depend>rospy</exec_depend>
 
