@@ -422,20 +422,16 @@ class Republisher:
             self.marker_updated = True
 
     def vehicle_attitude_listener(self, data: VehicleAttitude):
-        # # Quaternion rotation from the FRD body frame to the NED earth frame
-        
-        # # I don't know why, but the following line does work 
-        # # Including a right multiplication of the inverse of the delta quaternion, 
-        # # which contains a pure yaw rotation, the inverse direction of the x-component.
-
-        # transform from wxyz to xyzw
-        q_reset = [data.delta_q_reset[i] for i in [1, 2, 3, 0]]
+        # Quaternion rotation from the FRD body frame to the NED earth frame, wxyz -> xyzw
         q = [data.q[i] for i in [1, 2, 3, 0]]
 
-        q = tf.transformations.quaternion_multiply(q, q_reset)
+        # Note: q is already the corrected estimate, delta_q_reset must NOT be applied here.
+        # delta_q_reset is only the change of q at the last estimator reset (e.g., yaw alignment,
+        # EKF instance switch), and it is kept until the next reset. It is used by PX4 only when
+        # quat_reset_counter changes (see mc_att_control). Applying it to every sample results in
+        # a constant body-frame rotation offset (a wrong yaw, or flipped roll/pitch for a 180 deg reset).
 
         # FRD->NED attitude expressed as FLU->NWU, i.e., conjugated by a 180 deg rotation about x.
-        # (Equivalent to the inverse of the former base_link->world_frame transform.)
         with self.lock:
             self.baselink_transform.transform.rotation.x = q[0]
             self.baselink_transform.transform.rotation.y = -q[1]
