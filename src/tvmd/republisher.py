@@ -180,6 +180,21 @@ class MetaDataMarker:
         self.marker_array.markers[self.wtd_idx].color.r = 0.0
         self.marker_array.markers[self.wtd_idx].color.g = 1.0
 
+        # Actual thrusts of the propellers (from actuator_motors), along the propeller axes.
+        # Drawn in the actuator frames, so they follow the gimbals (and do not spin with the propellers).
+        self.thrust_idx = self.num_modules + 4
+        for aid in range(self.num_modules):
+            marker = MetaDataMarker.__get_default_arrow(9 + aid)
+            marker.header.frame_id = "module{}_actuator_link".format(aid+1)
+            marker.ns = "thrust"
+            marker.frame_locked = True
+            marker.color.r = 0.0
+            marker.color.g = 1.0
+            marker.color.b = 1.0
+            marker.points[0].z = self.origin_z
+            marker.points[1].z = self.origin_z
+            self.marker_array.markers.append(marker)
+
     
     """
     Update the positions of the pseudo-forces
@@ -242,6 +257,12 @@ class MetaDataMarker:
             position.x = self.origin_z * math.cos(a) * math.sin(b)
             position.y = -self.origin_z * math.sin(a)
             position.z = self.origin_z * math.cos(a) * math.cos(b)
+
+    def update_thrusts(self, thrusts: list, alpha: float = 1.0) -> None:
+        for aid in range(self.num_modules):
+            point = self.marker_array.markers[self.thrust_idx + aid].points[1]
+            target = self.origin_z + thrusts[aid] * self.scales
+            point.z += alpha * (target - point.z)
 
     def __update_arrow(self, marker_idx: int, vec: list, alpha: float) -> None:
         MetaDataMarker.__filter_point(self.marker_array.markers[marker_idx].points[1], vec, alpha)
@@ -409,6 +430,11 @@ class Republisher:
         self.servo_tau = float(get_param("servo_filter_tau", 0.03))    # gimbal joint angles
         self.last_meta_timestamp = 0
         self.last_servo_timestamp = 0
+        self.last_motor_timestamp = 0
+
+        # Motor model: thrust = c_l * u + Tf0 (ActuatorEffectivenessVTOL_TVMD.hpp)
+        self.thrust_cl = float(get_param("thrust_cl", 6.125))
+        self.thrust_tf0 = float(get_param("thrust_tf0", 0.0))
 
         # Mapping from actuator_servos.control to the joint angles:
         #   "px4":  angle = control * (MAXA - MINA) / 2 / GR, the inverse of the actuator scale in
@@ -476,6 +502,15 @@ class Republisher:
     def motor_listener(self, data: ActuatorMotors):        
         with self.lock:
             self.data_update(data, "motors")
+
+            # Throttle -> thrust [N], the inverse of tf_inverse_mapping() in ActuatorEffectivenessVTOL_TVMD
+            alpha = Republisher.filter_gain(self.force_tau, data.timestamp, self.last_motor_timestamp)
+            self.last_motor_timestamp = data.timestamp
+            # NaN: disarmed or unused output
+            thrusts = [self.thrust_cl * data.control[i] + self.thrust_tf0 if math.isfinite(data.control[i]) else 0.0
+                for i in range(self.num_modules)]
+            self.marker_data.update_thrusts(thrusts, alpha)
+            self.marker_updated = True
     
     def servo_listener(self, data: ActuatorServos):
         with self.lock:

@@ -26,6 +26,9 @@
     <param name="servo_gear_ratio" value="1.0"/>
     <!-- Starting point of the thrust vectors: height of the propeller center above the gimbal pivot [m] -->
     <param name="force_origin_z" value="$(arg force_origin_z)"/>
+    <!-- Motor model for the thrust arrows: thrust = c_l * u + Tf0 (ActuatorEffectivenessVTOL_TVMD.hpp) -->
+    <param name="thrust_cl" value="6.125"/>
+    <param name="thrust_tf0" value="0.0"/>
   </node>
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
     <!-- Do not throttle joint_states, otherwise the module TFs may fall behind base_link -->
