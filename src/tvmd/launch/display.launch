@@ -9,6 +9,7 @@
   <arg name="force_filter_tau" default="0.05"/>
   <arg name="servo_filter_tau" default="0.03"/>
   <arg name="servo_mapping" default="px4"/>
+  <arg name="force_origin_z" default="0.017"/>
   <node name="joint_state_republisher" pkg="tvmd" type="republisher.py" output="screen">
     <!-- Rate of republishing joint states, TF, and markers to Rviz [Hz] -->
     <param name="rate" value="$(arg rate)"/>
@@ -23,6 +24,8 @@
     <param name="servo_min_deg" value="-30"/>
     <param name="servo_max_deg" value="30"/>
     <param name="servo_gear_ratio" value="1.0"/>
+    <!-- Starting point of the thrust vectors: height of the propeller center above the gimbal pivot [m] -->
+    <param name="force_origin_z" value="$(arg force_origin_z)"/>
   </node>
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
     <!-- Do not throttle joint_states, otherwise the module TFs may fall behind base_link -->

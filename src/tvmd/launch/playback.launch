@@ -21,12 +21,15 @@
   <arg name="servo_filter_tau" default="0.03"/>
   <!-- actuator_servos.control -> joint angle: px4, rad (as GZ-Sim), urdf (legacy) -->
   <arg name="servo_mapping" default="px4"/>
+  <!-- Starting point of the thrust vectors: height of the propeller center above the gimbal pivot [m] -->
+  <arg name="force_origin_z" default="0.017"/>
 
   <include file="$(find tvmd)/launch/display.launch">
     <arg name="rate" value="$(arg rate)"/>
     <arg name="force_filter_tau" value="$(arg force_filter_tau)"/>
     <arg name="servo_filter_tau" value="$(arg servo_filter_tau)"/>
     <arg name="servo_mapping" value="$(arg servo_mapping)"/>
+    <arg name="force_origin_z" value="$(arg force_origin_z)"/>
   </include>
 
   <node name="player" pkg="rosbag" type="play" output="screen" required="true"

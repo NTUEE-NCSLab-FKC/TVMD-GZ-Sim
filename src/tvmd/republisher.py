@@ -74,7 +74,7 @@ class MetaDataMarker:
             
             self.marker_array.markers[aid].pose.position.x = 0
             self.marker_array.markers[aid].pose.position.y = 0
-            self.marker_array.markers[aid].pose.position.z = 0.065
+            self.marker_array.markers[aid].pose.position.z = self.origin_z
             self.marker_array.markers[aid].pose.orientation.x = 0.0
             self.marker_array.markers[aid].pose.orientation.y = 0.0
             self.marker_array.markers[aid].pose.orientation.z = 0.0
@@ -142,8 +142,9 @@ class MetaDataMarker:
         return marker
 
 
-    def __init__(self, _num_module: int) -> None:
-        self.z_offset = 0.065
+    def __init__(self, _num_module: int, origin_z: float = 0.017) -> None:
+        # Height of the propeller center above the gimbal pivot, in the propeller (actuator) frame [m]
+        self.origin_z = origin_z
         self.scales = 0.1
         self.num_modules = _num_module
         self.marker_array = MarkerArray()
@@ -228,6 +229,20 @@ class MetaDataMarker:
             for k in range(1, self.num_modules+1):
                 MetaDataMarker.__filter_point(self.marker_array.markers[aid].points[k], targets[aid][k], alpha)
                 
+    def update_origins(self, eta_y: list, eta_x: list) -> None:
+        """
+        Move the starting points of the pseudo-forces to the propeller centers, i.e., rotate
+        [0, 0, origin_z] with the gimbal: R_y(eta_y) * R_x(eta_x), the same joint chain as in the URDF
+        (body_gimbal_joint about y, then gimbal_actuator_joint about x).
+        """
+        for aid in range(self.num_modules):
+            a = eta_x[aid]
+            b = eta_y[aid]
+            position = self.marker_array.markers[aid].pose.position
+            position.x = self.origin_z * math.cos(a) * math.sin(b)
+            position.y = -self.origin_z * math.sin(a)
+            position.z = self.origin_z * math.cos(a) * math.cos(b)
+
     def __update_arrow(self, marker_idx: int, vec: list, alpha: float) -> None:
         MetaDataMarker.__filter_point(self.marker_array.markers[marker_idx].points[1], vec, alpha)
 
@@ -385,7 +400,7 @@ class Republisher:
 
         topic = 'visualization_marker_array'
         self.marker_pub = rospy.Publisher(topic, MarkerArray, queue_size=1)
-        self.marker_data = MetaDataMarker(self.num_modules)
+        self.marker_data = MetaDataMarker(self.num_modules, float(get_param("force_origin_z", 0.017)))
         self.marker_updated = False
 
         # First-order low-pass filters for smoother visualization, time constants [s] (0: disabled).
@@ -465,6 +480,8 @@ class Republisher:
     def servo_listener(self, data: ActuatorServos):
         with self.lock:
             self.data_update(data, "servos")
+            # The starting points of the pseudo-forces follow the gimbals
+            self.marker_updated = True
     
     def meta_data_listener(self, data: ControlAllocationMetaData):
         # print(data.saturated_idx)
@@ -577,6 +594,10 @@ class Republisher:
                 self.path_pub.publish(self.path_msg)
 
             if self.marker_updated or event is None:
+                # joint order per module: body_gimbal_joint (y), gimbal_actuator_joint (x), actuator_prop1_joint
+                self.marker_data.update_origins(
+                    [self.joint_msg.position[3*i + 0] for i in range(self.num_modules)],
+                    [self.joint_msg.position[3*i + 1] for i in range(self.num_modules)])
                 for marker in self.marker_data.marker_array.markers:
                     marker.header.stamp = stamp
                 self.marker_pub.publish(self.marker_data.marker_array)
