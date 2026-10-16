@@ -23,8 +23,8 @@
   <arg name="servo_mapping" default="px4"/>
   <!-- Starting point of the thrust vectors: height of the propeller center above the gimbal pivot [m] -->
   <arg name="force_origin_z" default="0.017"/>
-  <!-- Color of the thrust arrows: magnitude (blue: 0, red: full throttle) or module -->
-  <arg name="thrust_color_mode" default="magnitude"/>
+  <!-- Color of the thrust arrows: gradient (as the pseudo-forces), magnitude (blue: 0, red: full throttle) or module -->
+  <arg name="thrust_color_mode" default="gradient"/>
 
   <include file="$(find tvmd)/launch/display.launch">
     <arg name="rate" value="$(arg rate)"/>

@@ -145,8 +145,8 @@ class MetaDataMarker:
     def __init__(self, _num_module: int, origin_z: float = 0.017) -> None:
         # Height of the propeller center above the gimbal pivot, in the propeller (actuator) frame [m]
         self.origin_z = origin_z
-        # Coloring of the thrust arrows: "magnitude" (thrust / thrust_max) or "module"
-        self.thrust_color_mode = "magnitude"
+        # Coloring of the thrust arrows: "gradient" (as the pseudo-forces), "magnitude" (thrust / thrust_max) or "module"
+        self.thrust_color_mode = "gradient"
         self.thrust_max = 6.125     # [N]
         self.scales = 0.1
         self.num_modules = _num_module
@@ -185,15 +185,35 @@ class MetaDataMarker:
 
         # Actual thrusts of the propellers (from actuator_motors), along the propeller axes.
         # Drawn in the actuator frames, so they follow the gimbals (and do not spin with the propellers).
+        # Each thrust is a line strip (colored like the pseudo-forces) with an arrow head at the tip.
         self.thrust_idx = self.num_modules + 4
+        self.thrust_head_idx = self.thrust_idx + self.num_modules
+        self.thrust_length = [0.0 for i in range(self.num_modules)]
         for aid in range(self.num_modules):
-            marker = MetaDataMarker.__get_default_arrow(9 + aid)
+            marker = Marker()
+            marker.header.frame_id = "module{}_actuator_link".format(aid+1)
+            marker.header.stamp = rospy.Time.now()
+            marker.ns = "thrust"
+            marker.id = 9 + aid
+            marker.type = Marker.LINE_STRIP
+            marker.action = Marker.ADD
+            marker.pose.orientation.w = 1.0
+            marker.scale.x = 0.01   # line width, the same as the pseudo-forces
+            marker.frame_locked = True
+            marker.points = [Point() for k in range(MetaDataMarker.THRUST_POINTS)]
+            marker.colors = [ColorRGBA() for k in range(MetaDataMarker.THRUST_POINTS)]
+            for point in marker.points:
+                point.z = self.origin_z
+            self.marker_array.markers.append(marker)
+        for aid in range(self.num_modules):
+            marker = MetaDataMarker.__get_default_arrow(9 + self.num_modules + aid)
             marker.header.frame_id = "module{}_actuator_link".format(aid+1)
             marker.ns = "thrust"
             marker.frame_locked = True
-            marker.color.r = 0.0
-            marker.color.g = 1.0
-            marker.color.b = 1.0
+            # scale.x: shaft diameter, scale.y: head diameter, scale.z: head length
+            marker.scale.x = 0.01
+            marker.scale.y = 0.025
+            marker.scale.z = 0.03
             marker.points[0].z = self.origin_z
             marker.points[1].z = self.origin_z
             self.marker_array.markers.append(marker)
@@ -261,6 +281,9 @@ class MetaDataMarker:
             position.y = -self.origin_z * math.sin(a)
             position.z = self.origin_z * math.cos(a) * math.cos(b)
 
+    # Number of points of the thrust line strips
+    THRUST_POINTS = 5
+
     # Distinct colors of the modules, for thrust_color_mode = "module"
     MODULE_COLORS = [(1.0, 0.3, 0.3), (0.3, 1.0, 0.3), (0.3, 0.5, 1.0), (1.0, 0.9, 0.2)]
 
@@ -276,19 +299,33 @@ class MetaDataMarker:
             return (r - 2.0, 1.0, 0.0)
         return (1.0, 4.0 - r, 0.0)
 
-    def update_thrusts(self, thrusts: list, alpha: float = 1.0) -> None:
-        for aid in range(self.num_modules):
-            marker = self.marker_array.markers[self.thrust_idx + aid]
-            point = marker.points[1]
-            target = self.origin_z + thrusts[aid] * self.scales
-            point.z += alpha * (target - point.z)
+    def __thrust_colors(self, aid: int, length: float) -> list:
+        n = MetaDataMarker.THRUST_POINTS
+        if self.thrust_color_mode == "module":
+            return [MetaDataMarker.MODULE_COLORS[aid % len(MetaDataMarker.MODULE_COLORS)]] * n
+        if self.thrust_color_mode == "magnitude":
+            return [MetaDataMarker.__colormap(length / self.scales / self.thrust_max)] * n
+        # "gradient": the same red -> green gradient as the pseudo-force line strips
+        return [(1.0 - k / n, k / n, 0.0) for k in range(n)]
 
-            # Arrow length is the thrust [N] * scales [m/N], and the color shows the thrust level
-            if self.thrust_color_mode == "module":
-                color = MetaDataMarker.MODULE_COLORS[aid % len(MetaDataMarker.MODULE_COLORS)]
-            else:
-                color = MetaDataMarker.__colormap((point.z - self.origin_z) / self.scales / self.thrust_max)
-            marker.color.r, marker.color.g, marker.color.b = color
+    def update_thrusts(self, thrusts: list, alpha: float = 1.0) -> None:
+        n = MetaDataMarker.THRUST_POINTS
+        for aid in range(self.num_modules):
+            # Length is the thrust [N] * scales [m/N]
+            self.thrust_length[aid] += alpha * (thrusts[aid] * self.scales - self.thrust_length[aid])
+            length = max(self.thrust_length[aid], 0.0)
+            colors = self.__thrust_colors(aid, length)
+
+            line = self.marker_array.markers[self.thrust_idx + aid]
+            for k in range(n):
+                line.points[k].z = self.origin_z + length * k / (n - 1)
+                line.colors[k].r, line.colors[k].g, line.colors[k].b = colors[k]
+                line.colors[k].a = 1.0
+
+            head = self.marker_array.markers[self.thrust_head_idx + aid]
+            head.points[0].z = self.origin_z + max(length - head.scale.z, 0.0)
+            head.points[1].z = self.origin_z + length
+            head.color.r, head.color.g, head.color.b = colors[-1]
 
     def __update_arrow(self, marker_idx: int, vec: list, alpha: float) -> None:
         MetaDataMarker.__filter_point(self.marker_array.markers[marker_idx].points[1], vec, alpha)
@@ -462,7 +499,7 @@ class Republisher:
         self.thrust_cl = float(get_param("thrust_cl", 6.125))
         self.thrust_tf0 = float(get_param("thrust_tf0", 0.0))
         self.marker_data.thrust_max = self.thrust_cl + self.thrust_tf0     # thrust at full throttle
-        self.marker_data.thrust_color_mode = str(get_param("thrust_color_mode", "magnitude"))
+        self.marker_data.thrust_color_mode = str(get_param("thrust_color_mode", "gradient"))
 
         # Mapping from actuator_servos.control to the joint angles:
         #   "px4":  angle = control * (MAXA - MINA) / 2 / GR, the inverse of the actuator scale in
