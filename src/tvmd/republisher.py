@@ -395,6 +395,9 @@ class Republisher:
         self.last_meta_timestamp = 0
         self.last_servo_timestamp = 0
 
+        # actuator_servos.control is the servo angle in rad (true), or normalized to the joint limits (false)
+        self.servo_control_in_rad = bool(get_param("servo_control_in_rad", True))
+
         # Trajectory of base_link in world_frame
         self.path_pub = rospy.Publisher("trajectory", Path, queue_size=1)
         self.path_msg = Path()
@@ -425,9 +428,15 @@ class Republisher:
                     joint_name = self.joint_list[joint_idx]
                     joint = self.free_joints[joint_name]
 
-                    factor = (joint['max'] - joint['min']) / 2
-                    offset = (joint['max'] + joint['min']) / 2
-                    target = data.control[ctrl_idx] * factor + offset
+                    if self.servo_control_in_rad:
+                        # PX4 (ControlAllocationModularBundled) outputs the servo angles in rad,
+                        # which are used as the joint angles directly in GZ-Sim as well.
+                        target = data.control[ctrl_idx]
+                    else:
+                        # Normalized [-1, 1] to the joint limits
+                        factor = (joint['max'] - joint['min']) / 2
+                        offset = (joint['max'] + joint['min']) / 2
+                        target = data.control[ctrl_idx] * factor + offset
                     self.joint_msg.position[joint_idx] += alpha * (target - self.joint_msg.position[joint_idx])
         else:
             # Handle motors: only prop1 (idx 2) for each module
