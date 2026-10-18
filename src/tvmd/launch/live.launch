@@ -1,0 +1,33 @@
+<launch>
+  <!--
+    Live view of PX4 in Rviz through MAVLink, e.g.,
+      roslaunch tvmd live.launch target:=sitl
+      roslaunch tvmd live.launch target:=pixhawk
+    See readme.md (Live View) for the MAVLink setup.
+  -->
+  <!-- sitl or pixhawk: loads config/mavlink_$(arg target).yaml -->
+  <arg name="target" default="sitl"/>
+  <!-- Override the MAVLink connection of the config, e.g., udpin:0.0.0.0:14560 or /dev/ttyACM0 -->
+  <arg name="url" default=""/>
+
+  <!-- Rate of republishing joint states, TF, and markers to Rviz [Hz] -->
+  <arg name="rate" default="50"/>
+  <!-- Low-pass filter time constants for smoother visualization [s], 0 to disable -->
+  <arg name="force_filter_tau" default="0.05"/>
+  <arg name="servo_filter_tau" default="0.03"/>
+  <arg name="thrust_color_mode" default="gradient"/>
+  <arg name="thrust_head_offset" default="0.0"/>
+
+  <include file="$(find tvmd)/launch/display.launch">
+    <arg name="rate" value="$(arg rate)"/>
+    <arg name="force_filter_tau" value="$(arg force_filter_tau)"/>
+    <arg name="servo_filter_tau" value="$(arg servo_filter_tau)"/>
+    <arg name="thrust_color_mode" value="$(arg thrust_color_mode)"/>
+    <arg name="thrust_head_offset" value="$(arg thrust_head_offset)"/>
+  </include>
+
+  <node name="mavlink_bridge" pkg="tvmd" type="mavlink_bridge.py" output="screen" required="true">
+    <rosparam command="load" file="$(find tvmd)/config/mavlink_$(arg target).yaml"/>
+    <param name="url" value="$(arg url)" if="$(eval arg('url') != '')"/>
+  </node>
+</launch>

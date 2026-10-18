@@ -1,0 +1,18 @@
+# Pixhawk (airframe 13300_generic_vtol_tvmd) -> MAVProxy -> mavlink_bridge.py
+#   mavproxy.py --master=/dev/ttyACM0 --out=udp:127.0.0.1:14550 --out=udp:127.0.0.1:14560 ...
+url: udpin:0.0.0.0:14560
+# PWM_MAIN_FUNC1..4 = Motor 1..4, PWM_MAIN_MIN/MAX = 1000/2000 (SERVO_OUTPUT_RAW port 0)
+motor_port: 0
+motor_channels: [1, 2, 3, 4]
+motor_min: 1000
+motor_max: 2000
+# PWM_AUX_FUNC1..8 = Servo 1..8, PWM_AUX_MIN/MAX = 1200/1800 (SERVO_OUTPUT_RAW port 1)
+servo_port: 1
+servo_channels: [1, 2, 3, 4, 5, 6, 7, 8]
+servo_min: 1200
+servo_max: 1800
+# PWM_AUX_REV bits, one value per servo channel (1: reversed)
+servo_reverse: 0
+thr_mdl_fac: 0.0
+# Ask PX4 for higher rates on the MAVProxy link (0: keep the stream rates of PX4)
+request_rate: 0

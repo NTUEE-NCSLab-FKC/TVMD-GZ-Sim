@@ -53,6 +53,47 @@ Args: `start` (offset from the beginning of the bag [s]), `duration` (0 for the 
 
 If the firmware is compiled in control allocation debug mode, the `ControlAllocationMetaData` topic will be available in the rosbag file. This topic contains the control allocation pseudo-forces and the calculation intermediate variables, which are helpful in debugging. The `republisher` node will publish this topic and convert them to [/visualization_msgs](https://wiki.ros.org/visualization_msgs), such that this data can be displayed in Rviz.
 
+## Live View (MAVLink)
+
+`live.launch` shows the current state of PX4 (SITL or Pixhawk) in Rviz. `mavlink_bridge.py` converts MAVLink to the same `px4/*` topics as the rosbags, so the republisher and Rviz work in the same way:
+
+| MAVLink | Topic |
+|---|---|
+| `ATTITUDE_QUATERNION` | `px4/vehicle_attitude` |
+| `LOCAL_POSITION_NED` | `px4/vehicle_local_position` |
+| `SERVO_OUTPUT_RAW` (motor port) | `px4/actuator_motors` |
+| `SERVO_OUTPUT_RAW` (servo port) | `px4/actuator_servos` |
+
+The PWM outputs are converted back to the normalized controls by inverting the PX4 output mapping (output ranges in `config/mavlink_<target>.yaml`). `control_allocation_meta_data` is not available through MAVLink, so only the thrust arrows (not the pseudo-forces) are shown.
+
+Requires `pymavlink` (`pip3 install pymavlink`, installed with MAVProxy).
+
+### SITL
+
+QGC (14550) and MAVROS (14540) already use the default MAVLink links, so start a dedicated one in the PX4 shell (`pxh>`):
+```
+mavlink start -u 14590 -o 14591 -r 4000000 -m onboard
+mavlink stream -u 14590 -s ATTITUDE_QUATERNION -r 50
+mavlink stream -u 14590 -s LOCAL_POSITION_NED -r 50
+mavlink stream -u 14590 -s SERVO_OUTPUT_RAW_0 -r 50
+mavlink stream -u 14590 -s SERVO_OUTPUT_RAW_1 -r 50
+```
+Then:
+```bash
+roslaunch tvmd live.launch target:=sitl
+```
+
+### Pixhawk (through MAVProxy)
+
+Add an output for the bridge to MAVProxy (keep the outputs of QGC and MAVROS):
+```bash
+mavproxy.py --master=/dev/ttyACM0 --out=udp:127.0.0.1:14550 --out=udp:127.0.0.1:14560 ...
+roslaunch tvmd live.launch target:=pixhawk
+```
+Over USB, PX4 streams all the messages at 20-50 Hz. Over a telemetry radio the default rates are low, and `SERVO_OUTPUT_RAW_1` (the servos on AUX) is not streamed: enable them in the MAVLink console of QGC, e.g., `mavlink stream -d /dev/ttyS1 -s SERVO_OUTPUT_RAW_1 -r 20` (the device of the telemetry port).
+
+The bridge logs the received rates every 10 s, and the first `SERVO_OUTPUT_RAW` of each port: check that port 0 holds the motors and port 1 the servos, otherwise swap `motor_port`/`servo_port` in the config.
+
 ## Additional Tools
 ### SDF File Generation
 To generate the SDF file for GZ-Sim:

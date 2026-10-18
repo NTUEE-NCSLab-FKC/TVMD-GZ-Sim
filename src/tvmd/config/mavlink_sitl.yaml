@@ -1,0 +1,15 @@
+# PX4 SITL (airframe 4007_gz_tvmd) -> mavlink_bridge.py
+# A dedicated MAVLink instance is started in the PX4 shell, see readme.md (Live View)
+url: udpin:0.0.0.0:14591
+# SIM_GZ_EC_FUNC1..4 = Motor 1..4, SIM_GZ_EC_MIN/MAX = 150/1000
+motor_port: 0
+motor_channels: [1, 2, 3, 4]
+motor_min: 150
+motor_max: 1000
+# SIM_GZ_SV_FUNC1..8 = Servo 1..8, SIM_GZ_SV_MIN/MAX = 0/1000 (default)
+servo_port: 1
+servo_channels: [1, 2, 3, 4, 5, 6, 7, 8]
+servo_min: 0
+servo_max: 1000
+servo_reverse: 0
+thr_mdl_fac: 0.0

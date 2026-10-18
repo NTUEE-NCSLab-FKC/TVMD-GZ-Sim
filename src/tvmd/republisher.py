@@ -96,7 +96,8 @@ class MetaDataMarker:
             for iter in range(self.num_modules):
                 self.marker_array.markers[aid].points[iter].x = 0.0
                 self.marker_array.markers[aid].points[iter].y = 0.0
-                self.marker_array.markers[aid].points[iter].z = iter / 10.0
+                # Collapsed until control_allocation_meta_data is received (not available in the live MAVLink mode)
+                self.marker_array.markers[aid].points[iter].z = 0.0
                 self.marker_array.markers[aid].colors[iter].a = 1.0
                 self.marker_array.markers[aid].colors[iter].r = 1 - iter / (self.num_modules + 1)
                 self.marker_array.markers[aid].colors[iter].g = iter / (self.num_modules + 1)
