@@ -1,0 +1,30 @@
+<launch>
+  <!--
+    動力學測試 Launch 文件
+
+    模擬推力向量變化對機體位置和姿態的影響：
+    - 推力 → 加速度 → 速度 → 位置
+    - 力矩 → 角加速度 → 角速度 → 姿態
+
+    使用方式:
+      roslaunch tvmd test_dynamics.launch
+
+    test_dynamics.py 發布與 bag 相同的 px4/* topic (含 vehicle_local_position)，
+    由 display.launch 的 republisher.py 發布 TF (world_frame -> base_link) 並顯示在 RViz。
+  -->
+
+  <!-- 動力學模擬頻率 [Hz] -->
+  <arg name="rate" default="100"/>
+  <!-- 推力箭頭顏色: gradient, magnitude 或 module -->
+  <arg name="thrust_color_mode" default="gradient"/>
+
+  <include file="$(find tvmd)/launch/display.launch">
+    <arg name="thrust_color_mode" value="$(arg thrust_color_mode)"/>
+  </include>
+
+  <!-- 動力學測試發布器 -->
+  <node name="test_dynamics" pkg="tvmd" type="test_dynamics.py" output="screen">
+    <param name="rate" value="$(arg rate)"/>
+  </node>
+
+</launch>
